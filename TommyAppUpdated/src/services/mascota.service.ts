@@ -9,9 +9,9 @@ import { StorageService } from './storage.service';
 })
 export class MascotaService {
 
-    idAlerta;
-    alerta;
-    loading;
+    idAlerta: any;
+    alerta: any;
+    loading: any;
 
     constructor(
         private storageService: StorageService,
@@ -39,9 +39,9 @@ export class MascotaService {
         });
     }
 
-    revisarArchivosLocales(mascotas) {
-        let mascotasList = [];
-        mascotas.forEach(mascota => {
+    revisarArchivosLocales(mascotas:any) {
+        let mascotasList: any[] = [];
+        mascotas.forEach((mascota:any) => {
             if (mascota.urlFoto !== undefined && mascota.urlFoto  !== null) {
                 this.multimediaService.existeArchivo(mascota.urlFoto).then((resultado: any) =>{
                     if (resultado.existe) {

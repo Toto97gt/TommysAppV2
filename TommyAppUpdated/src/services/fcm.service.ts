@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { LocalNotifications } from '@ionic-native/local-notifications/ngx';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { NavController, Platform } from '@ionic/angular';
-import { FCM } from "cordova-plugin-fcm-with-dependecy-updated/ionic/ngx";
+import { FCM, FCMPlugin } from "@capacitor-community/fcm";
+import { PushNotifications } from '@capacitor/push-notifications';
 import { RestApiService } from './restApi.service';
 import { StorageService } from './storage.service';
 
@@ -12,99 +13,109 @@ export class FCMService {
 
     constructor(
         private navController: NavController,
-        private fcm: FCM,
-        private localNotifications: LocalNotifications,
+        private fcm: any,
+        private localNotifications: any,
         private platform: Platform,
         private restApiService: RestApiService,
         private storageService: StorageService
     ) { }
 
-    inicializar() {
-        this.fcm.requestPushPermission();
+    async inicializar() {
+        // 🚀 Pedir permisos
+        const permStatus = await PushNotifications.requestPermissions();
+        if (permStatus.receive === 'granted') {
+        await PushNotifications.register();
+        }
 
-        this.fcm.onNotification().subscribe(data => {
-            console.log('FCM Data', data);
-            
-            if (data.wasTapped) {
-                console.log('FCM Received in background', data);
+        // 📩 Listener cuando se recibe un push en foreground
+        PushNotifications.addListener('pushNotificationReceived', async (notif) => {
+        console.log('Push en foreground:', notif);
 
-                this.mostrarPantalla(data);
-            } else {
-                console.log('FCM Received in foreground', data);
-
-                if ( this.platform.is('android') || (this.platform.is('ios') && data.data === undefined) ) {
-
-                    this.localNotifications.schedule({
-                        title: data.title,
-                        text: data.body,
-                        data: data,
-                        foreground: true
-                    });
-
-                    this.localNotifications.on('click').subscribe(notificationReceived => {
-                        console.log('localNotifications notificationReceived;', notificationReceived);
-                        
-                        this.mostrarPantalla(notificationReceived.data);
-                    });
+        if (this.platform.is('android') || this.platform.is('ios')) {
+            await LocalNotifications.schedule({
+            notifications: [
+                {
+                title: notif.title ?? 'Notificación',
+                body: notif.body ?? '',
+                id: Date.now(),
+                schedule: { at: new Date(Date.now() + 1000) },
+                extra: notif.data
                 }
-            };
-        });
-        this.obtenerToken();
-        
-    }
-
-    obtenerToken() {
-        this.fcm.getToken().then(token => {
-            this.agregarDispositivo(token);
-        });
-
-        this.fcm.onTokenRefresh().subscribe(token => {
-            this.agregarDispositivo(token);
-        });
-    }
-
-    agregarDispositivo(token) {
-        let data = {
-            tokenFCM: token,
-            platform: this.platform.is('android') ? "ANDROID" : "IOS",
-            idUsuario: null
-        }
-
-        this.storageService.getItemObject('usuario').then((usuario: any) => {
-            if(usuario !== undefined && usuario !== null){
-                data.idUsuario = usuario.id;
-            }
-            this.restApiService.postApiPublic('dispositivo/agregar', data).then(resultado => {
-
+            ]
             });
-        });
-    }
-
-    redireccionar(){
-        this.fcm.getInitialPushPayload().then(pushPayload => {
-            console.log('FCM PushPayload', pushPayload);
-            
-            this.mostrarPantalla(pushPayload);
-        });
-    }
-
-    mostrarPantalla(pushPayload){
-        console.log('FCM PushPayload', pushPayload);
-
-        if(pushPayload !== undefined && pushPayload !== null && pushPayload.mostrar !== undefined && pushPayload.mostrar !== null){
-            if(pushPayload.mostrar === 'SERVICIO_LISTA'){
-                this.storageService.setItem('tipoProducto', pushPayload.tipoProducto).then(resultado =>{
-                    this.navController.navigateForward('/servicio-lista');
-                });
-            }else if(pushPayload.mostrar === 'SERVICIO_DETALLE'){
-                this.storageService.setItem('idServicio', pushPayload.idServicio).then(resultado =>{
-                    this.storageService.setItem('tipoProducto', pushPayload.tipoProducto).then(resultado =>{
-                        this.navController.navigateForward('/servicio-detalle');
-                    });
-                });
-            }else if(pushPayload.mostrar === 'NOTIFICACION_LISTA'){
-                this.navController.navigateForward('/notificacion-lista');
-            }
         }
+        });
+
+        // 📌 Cuando el usuario toca una notificación
+        PushNotifications.addListener('pushNotificationActionPerformed', (notif) => {
+        console.log('Notificación clicada:', notif.notification.data);
+        this.mostrarPantalla(notif.notification.data);
+        });
+
+        // 🎯 Token inicial de FCM
+        this.obtenerToken();
+
+        const { token } = await FCM.getToken();
+        console.log('Token FCM:', token);
+
+        FCM.refreshToken().then((newToken) => {
+            console.log('Token FCM refrescado:', newToken.token);
+            this.agregarDispositivo(newToken.token);
+        });
     }
+
+  async obtenerToken() {
+    const { token } = await FCM.getToken();
+    console.log('Token FCM:', token);
+    this.agregarDispositivo(token);
+  }
+
+  agregarDispositivo(token: string) {
+    let data: any = {
+      tokenFCM: token,
+      platform: this.platform.is('android') ? 'ANDROID' : 'IOS',
+      idUsuario: null
+    };
+
+    this.storageService.getItemObject('usuario').then((usuario: any) => {
+      if (usuario) {
+        data.idUsuario = usuario.id;
+      }
+      this.restApiService.postApiPublic('dispositivo/agregar', data);
+    });
+  }
+
+  async redireccionar() {
+    // ✅ Ya no existe getInitialPushPayload en FCM
+    const delivered = await PushNotifications.getDeliveredNotifications();
+    console.log('Notificaciones entregadas:', delivered);
+
+    if (delivered.notifications.length > 0) {
+      this.mostrarPantalla(delivered.notifications[0].data);
+    }
+  }
+
+  mostrarPantalla(pushPayload: any) {
+    if (!pushPayload || !pushPayload.mostrar) return;
+
+    switch (pushPayload.mostrar) {
+      case 'SERVICIO_LISTA':
+        this.storageService.setItem('tipoProducto', pushPayload.tipoProducto).then(() => {
+          this.navController.navigateForward('/servicio-lista');
+        });
+        break;
+
+      case 'SERVICIO_DETALLE':
+        this.storageService.setItem('idServicio', pushPayload.idServicio).then(() => {
+          this.storageService.setItem('tipoProducto', pushPayload.tipoProducto).then(() => {
+            this.navController.navigateForward('/servicio-detalle');
+          });
+        });
+        break;
+
+      case 'NOTIFICACION_LISTA':
+        this.navController.navigateForward('/notificacion-lista');
+        break;
+    }
+  }
 }

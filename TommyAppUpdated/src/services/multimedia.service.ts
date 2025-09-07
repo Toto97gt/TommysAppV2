@@ -1,397 +1,392 @@
 import { Injectable } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { Camera, CameraOptions } from '@ionic-native/camera/ngx';
-import { FileTransfer } from '@ionic-native/file-transfer/ngx';
-import { File } from '@ionic-native/file/ngx';
-import { MediaCapture, MediaFile } from '@ionic-native/media-capture/ngx';
-import { TranscodeOptions, VideoEditor } from '@ionic-native/video-editor/ngx';
-import { PermissionService } from 'src/services/permission.service';
 import { v4 } from 'uuid';
-import { ConnectionStatus, NetworkService } from './network.service';
 
-@Injectable({
-    providedIn: 'root'
-})
+import { Camera, CameraResultType, CameraSource, GalleryImageOptions } from '@capacitor/camera';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Capacitor } from '@capacitor/core';
+
+import { VideoRecorder } from '@capacitor-community/video-recorder';
+import { FilePicker, PickMediaResult, PickedFile } from '@capawesome/capacitor-file-picker';
+
+import { PermissionService } from 'src/services/permission.service';
+import { NetworkService, ConnectionStatus } from './network.service';
+
+@Injectable({ providedIn: 'root' })
 export class MultimediaService {
 
-    constructor(
-        private mediaCapture: MediaCapture,
-        private videoEditor: VideoEditor,
-        private camera: Camera,
-        private file: File,
-        private transfer: FileTransfer,
-        private sanitizer: DomSanitizer,
-        private networkService: NetworkService,
-        private permissionService: PermissionService
-    ) { }
+  constructor(
+    private sanitizer: DomSanitizer,
+    private networkService: NetworkService,
+    private permissionService: PermissionService
+  ) {}
 
-    capturarFotoBlob() {
-        return new Promise(resolve => {
-            let options: CameraOptions = {
-                quality: 50,
-                destinationType: this.camera.DestinationType.DATA_URL,
-                encodingType: this.camera.EncodingType.JPEG,
-                mediaType: this.camera.MediaType.PICTURE,
-                correctOrientation: true,
-                allowEdit: false
-            };
+  // ---------------------------
+  // FOTOS
+  // ---------------------------
 
-            this.camera.getPicture(options).then((imageData: string) => {
-                let imageBlob = this.b64toBlob(imageData, 'image/jpeg');
-                let nombreFoto = v4() + '.jpg';
+  /** Captura foto (camera) y la guarda como archivo local + retorna base64 */
+  async capturarFotoBlob(): Promise<{
+    nombre: string;
+    url: string;          // uri nativa (filesystem://...)
+    displayUrl: any;      // sanitizer SafeResourceUrl (convertFileSrc)
+    base64: string;
+  } | null> {
+    try {
+      await this.permissionService.getPermisosCorrectos();
+      const photo = await Camera.getPhoto({
+        quality: 50,
+        correctOrientation: true,
+        allowEditing: false,
+        source: CameraSource.Camera,
+        resultType: CameraResultType.Base64,
+        saveToGallery: false
+      });
 
-                this.file.writeFile(this.file.dataDirectory, nombreFoto, imageBlob).then(response => {
-                    let foto = {
-                        nombre: nombreFoto,
-                        url: this.file.dataDirectory + nombreFoto,
-                        base64: imageData
-                    }
-                    
-                    console.log('Captura de foto:', foto.url);
+      if (!photo.base64String) return null;
 
-                    resolve(foto);
-                }).catch(error => {
-                    console.error('Error capturarGuardarFoto:', error);
-                    resolve(null);
-                });
-            }).catch(error => {
-                console.error('Error capturarGuardarFoto:', error);
-                resolve(null);
-            });
-        });
+      const nombreFoto = `${v4()}.jpg`;
+      const write = await Filesystem.writeFile({
+        path: nombreFoto,
+        data: photo.base64String,
+        directory: Directory.Data,
+        encoding: Encoding.UTF8
+      });
+
+      const displayUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+        Capacitor.convertFileSrc(write.uri)
+      );
+
+      return {
+        nombre: nombreFoto,
+        url: write.uri,
+        displayUrl,
+        base64: photo.base64String
+      };
+    } catch (e) {
+      console.error('Error capturarFotoBlob:', e);
+      return null;
     }
+  }
 
-    capturarFotoUrl() {
-        return new Promise(resolve => {
-            this.permissionService.solicitarPermisoEscritura().then(result => {
-                this.mediaCapture.captureImage({ limit: 1 }).then((data: MediaFile[]) => {
-                    if (data.length > 0) {
-                        const url = decodeURIComponent(data[0].fullPath);
-                        const nombre = url.replace(/^.*[\\\/]/, '');
-                        const ruta = url.replace(/[^\/]*$/, '');
-                        const extension = nombre.split('.').pop();
-        
-                        console.log('Url', url);
-                        console.log('Nombre Foto', nombre);
-                        console.log('Ruta Foto', ruta);
-                        console.log('Extension Foto', extension);
-        
-                        let foto = {
-                            url: data[0].fullPath,
-                            nombreLocal: nombre,
-                            rutaLocal: ruta,
-                            extension: extension
-                        }
+  /** Captura foto y retorna solo URL (sin base64) */
+  async capturarFotoUrl(): Promise<{
+    url: string;          // filesystem://...
+    displayUrl: any;      // SafeResourceUrl
+    nombreLocal: string;
+    rutaLocal: string;
+    extension: string;
+  } | null> {
+    try {
+      const photo = await Camera.getPhoto({
+        quality: 50,
+        correctOrientation: true,
+        allowEditing: false,
+        source: CameraSource.Camera,
+        resultType: CameraResultType.Uri,
+        saveToGallery: true
+      });
 
-                        resolve(foto);
-                    }else{
-                        resolve (null);
-                    }
-                }).catch(error => {
-                    console.error('Error capturarVideoUrl:', error);
-                    resolve(null);
-                });
-            });
-        });
+      //const uri = photo.path || photo.webPath || photo.saveToGallery ? (photo.path ?? photo.webPath!) : photo.webPath!;
+      const uri = photo.path ?? photo.webPath ?? '';
+      if (!uri) return null;
+
+      const nombre = this.extraerNombre(uri);
+      const ruta = this.extraerRuta(uri);
+      const extension = this.extraerExtension(nombre);
+
+      const displayUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+        Capacitor.convertFileSrc(uri)
+      );
+
+      return {
+        url: uri,
+        displayUrl,
+        nombreLocal: nombre,
+        rutaLocal: ruta,
+        extension
+      };
+    } catch (e) {
+      console.error('Error capturarFotoUrl:', e);
+      return null;
     }
+  }
 
-    capturarFotoUrlOld() {
-        return new Promise(resolve => {
-            let options: CameraOptions = {
-                quality: 50,
-                destinationType: this.camera.DestinationType.FILE_URI,
-                encodingType: this.camera.EncodingType.JPEG,
-                mediaType: this.camera.MediaType.PICTURE,
-                correctOrientation: true,
-                allowEdit: false
-            };
+  /** Selecciona foto de galería y la guarda + retorna base64 */
+  async galeriaFotoBlob(): Promise<{
+    nombre: string;
+    url: string;
+    displayUrl: any;
+    base64: string;
+  } | null> {
+    try {
+      const photo = await Camera.getPhoto({
+        quality: 50,
+        allowEditing: false,
+        source: CameraSource.Photos,
+        resultType: CameraResultType.Base64
+      });
 
-            this.camera.getPicture(options).then((imageURL: string) => {
-                const url = decodeURIComponent(imageURL);
-                const nombre = url.replace(/^.*[\\\/]/, '');
-                const ruta = url.replace(/[^\/]*$/, '');
-                const extension = nombre.split('.').pop();
+      if (!photo.base64String) return null;
 
-                console.log('Url', url);
-                console.log('Nombre Foto', nombre);
-                console.log('Ruta Foto', ruta);
-                console.log('Extension Foto', extension);
+      const nombreFoto = `${v4()}.jpg`;
+      const write = await Filesystem.writeFile({
+        path: nombreFoto,
+        data: photo.base64String,
+        directory: Directory.Data,
+        encoding: Encoding.UTF8
+      });
 
-                let foto = {
-                    url: imageURL,
-                    nombreLocal: nombre,
-                    rutaLocal: ruta,
-                    extension: extension
-                }
+      const displayUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+        Capacitor.convertFileSrc(write.uri)
+      );
 
-                resolve(foto);
-            }).catch(error => {
-                console.error('Error capturarFotoUrl:', error);
-                resolve(null);
-            });
-        });
+      return {
+        nombre: nombreFoto,
+        url: write.uri,
+        displayUrl,
+        base64: photo.base64String
+      };
+    } catch (e) {
+      console.error('Error galeriaFotoBlob:', e);
+      return null;
     }
+  }
 
-    galeriaFotoBlob() {
-        return new Promise(resolve => {
-            let options: CameraOptions = {
-                quality: 50,
-                sourceType: this.camera.PictureSourceType.PHOTOLIBRARY,
-                destinationType: this.camera.DestinationType.DATA_URL,
-                encodingType: this.camera.EncodingType.JPEG,
-                mediaType: this.camera.MediaType.ALLMEDIA,
-                correctOrientation: true,
-                allowEdit: false
-            };
+  /** Selecciona foto y retorna URL */
+  async galeriaFotoUrl(): Promise<{
+    url: string;
+    displayUrl: any;
+    nombreLocal: string;
+    rutaLocal: string;
+    extension: string;
+  } | null> {
+    try {
+      const photo = await Camera.getPhoto({
+        quality: 50,
+        allowEditing: false,
+        source: CameraSource.Photos,
+        resultType: CameraResultType.Uri
+      });
 
-            this.camera.getPicture(options).then((imageData: string) => {
-                let imageBlob = this.b64toBlob(imageData, 'image/jpeg');
-                let nombreFoto = v4() + '.jpg';
+      const uri = photo.path || photo.webPath!;
+      if (!uri) return null;
 
-                this.file.writeFile(this.file.dataDirectory, nombreFoto, imageBlob).then(response => {
-                    let foto = {
-                        nombre: nombreFoto,
-                        url: this.file.dataDirectory + nombreFoto,
-                        base64: imageData
-                    }
-                    
-                    console.log('Captura de foto:', foto.url);
+      const nombre = this.extraerNombre(uri);
+      const ruta = this.extraerRuta(uri);
+      const extension = this.extraerExtension(nombre);
 
-                    resolve(foto);
-                }).catch(error => {
-                    console.error('Error capturarGuardarFoto:', error);
-                    resolve(null);
-                });
-            }).catch(error => {
-                console.error('Error capturarGuardarFoto:', error);
-                resolve(null);
-            });
-        });
+      const displayUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+        Capacitor.convertFileSrc(uri)
+      );
+
+      return { url: uri, displayUrl, nombreLocal: nombre, rutaLocal: ruta, extension };
+    } catch (e) {
+      console.error('Error galeriaFotoUrl:', e);
+      return null;
     }
+  }
 
-    galeriaFotoUrl() {
-        return new Promise(resolve => {
-            let options: CameraOptions = {
-                quality: 50,
-                sourceType: this.camera.PictureSourceType.PHOTOLIBRARY,
-                destinationType: this.camera.DestinationType.FILE_URI,
-                encodingType: this.camera.EncodingType.JPEG,
-                mediaType: this.camera.MediaType.PICTURE,
-                correctOrientation: true,
-                allowEdit: false
-            };
+  // ---------------------------
+  // VIDEO
+  // ---------------------------
 
-            this.camera.getPicture(options).then((imageURL: string) => {
-                const url = decodeURIComponent(imageURL);
-                const nombre = url.replace(/^.*[\\\/]/, '');
-                const ruta = url.replace(/[^\/]*$/, '');
-                const extension = nombre.split('.').pop();
+  /** Graba un video (usa @capacitor-community/video-recorder) y retorna URL local */
+  async capturarVideoUrl(): Promise<{
+    url: string;          // file://... o content://...
+    displayUrl: any;
+    nombreLocal: string;
+    rutaLocal: string;
+    extension: string;
+  } | null> {
+    try {
+      await this.permissionService.request('filesystem');
+      // Inicializa cámara (opcional ajustar quality/resolución)
+      await VideoRecorder.initialize({
+        quality: 1, // MAX_720P; ver enum en docs
+        autoShow: true
+      });
+      await VideoRecorder.startRecording();
+      // Aquí puedes mostrar UI y luego detener según tu flujo
+      const { videoUrl } = await VideoRecorder.stopRecording();
 
-                console.log('Url', url);
-                console.log('Nombre Foto', nombre);
-                console.log('Ruta Foto', ruta);
-                console.log('Extension Foto', extension);
+      if (!videoUrl) return null;
 
-                let foto = {
-                    url: imageURL,
-                    nombreLocal: nombre,
-                    rutaLocal: ruta,
-                    extension: extension
-                }
+      const nombre = this.extraerNombre(videoUrl);
+      const ruta = this.extraerRuta(videoUrl);
+      const extension = this.extraerExtension(nombre);
 
-                resolve(foto);
-            }).catch(error => {
-                console.error('Error capturarFotoUrl:', error);
-                resolve(null);
-            });
-        });
+      const displayUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+        Capacitor.convertFileSrc(videoUrl)
+      );
+
+      return { url: videoUrl, displayUrl, nombreLocal: nombre, rutaLocal: ruta, extension };
+    } catch (e) {
+      console.error('Error capturarVideoUrl:', e);
+      return null;
+    } finally {
+      try { await VideoRecorder.destroy(); } catch {}
     }
+  }
 
-    capturarVideoUrl() {
-        return new Promise(resolve => {
-            this.permissionService.solicitarPermisoEscritura().then(result => {
-                this.mediaCapture.captureVideo({ limit: 1, duration: 30 }).then((data: MediaFile[]) => {
-                    if (data.length > 0) {
-                        const url = decodeURIComponent(data[0].fullPath);
-                        const nombreVideo = url.replace(/^.*[\\\/]/, '');
-                        const rutaVideo = url.replace(/[^\/]*$/, '');
-                        const extVideo = nombreVideo.split('.').pop();
+  /** Selecciona video(s) desde galería */
+  async galeriaVideoUrl(): Promise<{
+    url: string;
+    displayUrl: any;
+    nombreLocal: string;
+    rutaLocal: string;
+    extension: string;
+  } | null> {
+    try {
+        // ❌ multiple -> ✅ limit
+        const res: PickMediaResult = await FilePicker.pickVideos({ limit: 1 });
+        if (!res?.files?.length) return null;
 
-                        console.log('Data', data[0]);
-                        console.log('Url', url);
-                        console.log('Nombre Video', nombreVideo);
-                        console.log('Ruta Video', rutaVideo);
-                        console.log('Extension Video', extVideo);
+        const file: PickedFile = res.files[0];
 
-                        const options: TranscodeOptions = {
-                            fileUri: data[0].fullPath,
-                            outputFileName: nombreVideo,
-                            saveToLibrary: true,
-                            deleteInputFile: true,
-                            maintainAspectRatio: true,
-                            videoBitrate: 2500000
-                        }
-                        this.videoEditor.transcodeVideo(options).then(urlVideoCodificado => {
-                            const urlNuevo = decodeURIComponent('file://' + urlVideoCodificado);
-                            const nombreVideoNuevo = urlNuevo.replace(/^.*[\\\/]/, '');
-                            const rutaVideoNuevo = urlNuevo.replace(/[^\/]*$/, '');
-                            const extVideoNuevo = nombreVideoNuevo.split('.').pop();
+        // En Android/iOS tendrás file.path; en Web, blob.
+        let uri: string;
+        let displayUrl: any;
 
-                            console.log('Nuevo archivo', urlVideoCodificado);
-                            console.log('Url Nuevo', urlNuevo);
-                            console.log('Nombre Video Nuevo', nombreVideoNuevo);
-                            console.log('Ruta Video Nuevo', rutaVideoNuevo);
-                            console.log('Extension Video Nuevo', extVideoNuevo);
-
-                            let video = {
-                                url: urlNuevo,
-                                nombreLocal: nombreVideoNuevo,
-                                rutaLocal: rutaVideoNuevo,
-                                extension: extVideoNuevo
-                            }
-                            console.log('Video: ', video);
-    
-                            resolve(video);
-                        }).catch(error => {
-                            console.log('Error en videoEditor', error);
-                            resolve (null);
-                        });
-                    }else{
-                        resolve (null);
-                    }
-                }).catch(error => {
-                    console.error('Error capturarVideoUrl:', error);
-                    resolve(null);
-                });
-            });
-        });
-    }
-
-    galeriaVideoUrl() {
-        return new Promise(resolve => {
-            let options: CameraOptions = {
-                sourceType: this.camera.PictureSourceType.PHOTOLIBRARY,
-                destinationType: this.camera.DestinationType.FILE_URI,
-                mediaType: this.camera.MediaType.VIDEO
-            };
-
-            this.camera.getPicture(options).then((imageURL: string) => {
-                const url = decodeURIComponent(imageURL);
-                const nombre = url.replace(/^.*[\\\/]/, '');
-                const ruta = url.replace(/[^\/]*$/, '');
-                const extension = nombre.split('.').pop();
-
-                console.log('Url', url);
-                console.log('Nombre Foto', nombre);
-                console.log('Ruta Foto', ruta);
-                console.log('Extension Foto', extension);
-
-                let foto = {
-                    url: imageURL,
-                    nombreLocal: nombre,
-                    rutaLocal: ruta,
-                    extension: extension
-                }
-
-                resolve(foto);
-            }).catch(error => {
-                console.error('Error capturarFotoUrl:', error);
-                resolve(null);
-            });
-        });
-    }
-
-    eliminarArchivoLocal(urlLocal) {
-        return new Promise(resolve => {
-            const nombreArchivo = urlLocal.replace(/^.*[\\\/]/, '');
-            const rutaArchivo = urlLocal.replace(/[^\/]*$/, '');
-
-            this.file.removeFile(rutaArchivo, nombreArchivo).then(success => {
-                resolve(true);
-            }).catch((error) => {
-                resolve(false);
-            });
-        });
-    }
-
-    b64toBlob(b64Data, contentType) {
-        contentType = contentType || '';
-        var sliceSize = 512;
-        var byteCharacters = atob(b64Data);
-        var byteArrays = [];
-
-        for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-            var slice = byteCharacters.slice(offset, offset + sliceSize);
-
-            var byteNumbers = new Array(slice.length);
-            for (var i = 0; i < slice.length; i++) {
-                byteNumbers[i] = slice.charCodeAt(i);
-            }
-
-            var byteArray = new Uint8Array(byteNumbers);
-
-            byteArrays.push(byteArray);
+        if (file.path) {
+        uri = file.path; // nativo
+        displayUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+            Capacitor.convertFileSrc(file.path)
+        );
+        } else if (file.blob) {
+        // Web: crea un object URL para previsualizar
+        uri = URL.createObjectURL(file.blob);
+        displayUrl = this.sanitizer.bypassSecurityTrustResourceUrl(uri);
+        } else {
+        return null;
         }
 
-        var blob = new Blob(byteArrays, { type: contentType });
-        return blob;
+        const nombre = file.name ?? this.extraerNombre(uri);
+        const ruta = this.extraerRuta(uri);
+        const extension = this.extraerExtension(nombre);
+
+        return { url: uri, displayUrl, nombreLocal: nombre, rutaLocal: ruta, extension };
+    } catch (e) {
+        console.error('Error galeriaVideoUrl:', e);
+        return null;
     }
+  }
 
-    descargar(urlArchivo){
-        return new Promise(resolve => {
-            if (this.networkService.getCurrentNetworkStatus() === ConnectionStatus.Online) {
-                const url = decodeURIComponent(urlArchivo);
-                const nombre = url.replace(/^.*[\\\/]/, '');
-                const extension = nombre.split('.').pop();
-                const nombreLocal = this.file.dataDirectory + nombre;
+  // ---------------------------
+  // ARCHIVOS
+  // ---------------------------
 
-                const fileTransfer = this.transfer.create();
-                fileTransfer.download(urlArchivo, nombreLocal).then(archivoDescargado => {
-                    console.log('Archivo descargado', archivoDescargado);
-                    const win: any = window;
-                    const url = win.Ionic.WebView.convertFileSrc(archivoDescargado.nativeURL)
-                    const urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(url);
-
-                    resolve({exitoso: true, mensaje: 'Archivo descargado exitosamente.', url: url, urlSafe: urlSafe, nativeURL: archivoDescargado.nativeURL});
-                }).catch(error => {
-                    resolve({exitoso: false, mensaje: 'Error al descargar multimedia.'});
-                });
-            } else {
-                resolve({exitoso: false, mensaje: 'No existe conexion!'});
-            }
-        });
+  /** Elimina archivo local por URI (filesystem://... o file://...) */
+  async eliminarArchivoLocal(urlLocal: string): Promise<boolean> {
+    try {
+      const { path, directory } = await this.normalizarRuta(urlLocal);
+      await Filesystem.deleteFile({ path, directory });
+      return true;
+    } catch (e) {
+      console.warn('No se pudo eliminar archivo', urlLocal, e);
+      return false;
     }
+  }
 
-    existeArchivo(urlArchivo){
-        return new Promise(resolve => {
-            const url = decodeURIComponent(urlArchivo);
-            const nombre = url.replace(/^.*[\\\/]/, '');
-            const extension = nombre.split('.').pop();
-            console.log('Extension', extension);
+  /** Verifica si existe un archivo en el sandbox de la app (por nombre) */
+  async existeArchivo(urlArchivo: string): Promise<{
+    existe: boolean;
+    url?: string;
+    urlSafe?: any;
+    nativeURL?: string;
+  }> {
+    try {
+      const nombre = this.extraerNombre(urlArchivo);
+      const stat = await Filesystem.stat({ path: nombre, directory: Directory.Data });
+      const display = Capacitor.convertFileSrc(stat.uri);
+      const isMp4 = nombre.toLowerCase().endsWith('.mp4');
 
-            console.log('Revisando archivo', this.file.dataDirectory, nombre);
-            this.file.checkFile(this.file.dataDirectory, nombre).then(existe => {
-                if(existe){
-                    const win: any = window;
-                    const url = win.Ionic.WebView.convertFileSrc(this.file.dataDirectory + nombre)
-                    const urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(extension === 'mp4' ? (url + '#t=0.1') : url);
-
-                    let data = {existe: true, url: url, urlSafe: urlSafe, nativeURL: this.file.dataDirectory + nombre}
-                    console.log('Existe archivo', data);
-
-                    resolve(data);
-                }else{
-                    let data = {existe: false, url: url}
-                    console.log('No existe archivo', data);
-
-                    resolve({existe: false, url: url});
-                }
-            }).catch(error => {
-                console.error('Error al revisar archivo', this.file.dataDirectory, nombre, error);
-
-                resolve({existe: false, url: url});
-            });;
-        });
+      return {
+        existe: true,
+        url: isMp4 ? `${display}#t=0.1` : display,
+        urlSafe: this.sanitizer.bypassSecurityTrustResourceUrl(isMp4 ? `${display}#t=0.1` : display),
+        nativeURL: stat.uri
+      };
+    } catch {
+      return { existe: false, url: urlArchivo };
     }
+  }
 
+  /** Descarga un archivo (con HttpClient en tu RestApiService) y lo guarda en sandbox */
+  async descargar(urlArchivo: string): Promise<{
+    exitoso: boolean;
+    mensaje: string;
+    url?: string;
+    urlSafe?: any;
+    nativeURL?: string;
+  }> {
+    try {
+      if (this.networkService.getCurrentNetworkStatus() !== ConnectionStatus.Online) {
+        return { exitoso: false, mensaje: 'No existe conexión!' };
+      }
+
+      // Obtén el blob con tu RestApiService/HttpClient (inyéctalo si prefieres) y pásalo aquí.
+      const resp = await fetch(urlArchivo);
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const blob = await resp.blob();
+
+      const nombre = this.extraerNombre(urlArchivo) || `${v4()}`;
+      const base64 = await this.blobToBase64(blob);
+
+      const write = await Filesystem.writeFile({
+        path: nombre,
+        data: base64,
+        directory: Directory.Data
+      });
+
+      const display = Capacitor.convertFileSrc(write.uri);
+
+      return {
+        exitoso: true,
+        mensaje: 'Archivo descargado exitosamente.',
+        url: display,
+        urlSafe: this.sanitizer.bypassSecurityTrustResourceUrl(display),
+        nativeURL: write.uri
+      };
+    } catch (e) {
+      console.error('Error al descargar multimedia', e);
+      return { exitoso: false, mensaje: 'Error al descargar multimedia.' };
+    }
+  }
+
+  // ---------------------------
+  // HELPERS
+  // ---------------------------
+
+  private extraerNombre(uri: string): string {
+    const decoded = decodeURIComponent(uri);
+    const m = decoded.match(/[^/\\]+$/);
+    return m ? m[0] : decoded;
+    // ej: file:///.../DCIM/Camera/VID_1234.mp4 -> VID_1234.mp4
+  }
+
+  private extraerRuta(uri: string): string {
+    const decoded = decodeURIComponent(uri);
+    return decoded.replace(/[^/\\]+$/, '');
+  }
+
+  private extraerExtension(nombre: string): string {
+    const parts = nombre.split('.');
+    return parts.length > 1 ? parts.pop()!.toLowerCase() : '';
+  }
+
+  private async blobToBase64(blob: Blob): Promise<string> {
+    const buffer = await blob.arrayBuffer();
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+  }
+
+  /** Convierte URI (file://, content://, filesystem://) a { path, directory } para Filesystem */
+  private async normalizarRuta(uri: string): Promise<{ path: string; directory: Directory }> {
+    // Si el archivo fue guardado con Filesystem en Directory.Data, basta con extraer el nombre
+    const nombre = this.extraerNombre(uri);
+    return { path: nombre, directory: Directory.Data };
+  }
 }
