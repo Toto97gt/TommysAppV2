@@ -1,0 +1,20 @@
+<ion-header>
+    <ion-toolbar class="header-color" style="font-weight: bold;">
+        <ion-buttons slot="start">
+            <ion-back-button mode="md"></ion-back-button>
+        </ion-buttons>
+        <ion-title>T&eacute;rminos y Condiciones</ion-title>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-content">
+    <ion-row>
+        <ion-col size="12">
+            <ion-card class="ion-card">
+                <ion-card-content *ngIf="terminos !== undefined && terminos !== null" [innerHTML]="terminos">
+                    
+                </ion-card-content>
+            </ion-card>
+        </ion-col>
+    </ion-row>
+</ion-content>

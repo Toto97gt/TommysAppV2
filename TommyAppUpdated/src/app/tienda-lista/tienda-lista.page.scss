@@ -1,0 +1,23 @@
+.header-image3{
+    width: 100%;
+    min-height: 250px;
+    background: lightgray;
+}
+
+.header-image3 ion-icon{
+    margin-left: 45%;
+    margin-top: 25%;
+    font-size: 35px;
+}
+
+@media (min-width: 650px) and (max-width: 900px) {
+    .header-image3 {
+        height: 400px;
+    }
+}
+
+@media (min-width: 900px) {
+    .header-image3 {
+        height: 600px;
+    }
+}

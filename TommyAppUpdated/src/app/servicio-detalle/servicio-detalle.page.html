@@ -1,0 +1,103 @@
+<ion-header>
+    <ion-toolbar class="header-color" style="font-weight: bold;">
+        <ion-buttons slot="start">
+            <ion-back-button mode="md"></ion-back-button>
+        </ion-buttons>
+        <ion-title>
+            <span *ngIf="tipoProducto === 'ASEO'">Detalle Grooming SPA</span>
+            <span *ngIf="tipoProducto === 'PASEO'">Detalle Dog Walker</span>
+        </ion-title>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-content">
+    <ion-card class="ion-card">
+        <ion-card-content>
+            <ion-list *ngIf="servicio !== undefined && servicio !== null">
+                <ion-item>
+                    <ion-row style="width: 100%;">
+                        <ion-row style="width: 100%;">
+                            <ion-col size="4" class="center">
+                                <img *ngIf="servicio.mascota.urlFotoSafe !== undefined && servicio.mascota.urlFotoSafe !== null" [src]="servicio.mascota.urlFotoSafe" class="header-image">
+                                <img *ngIf="servicio.mascota.urlFotoSafe === undefined || servicio.mascota.urlFotoSafe === null" src="../assets/logo.png" class="header-image">
+                                
+                                <span *ngIf="servicio.estado === 'SOLICITUD'" style="font-size: 15px; font-weight: bold;">
+                                    <br>
+                                    {{ servicio.estadoFormateado }}
+                                </span>
+                                <span *ngIf="servicio.estado === 'EN_PROCESO'" style="font-size: 15px; font-weight: bold; color: #E85929">
+                                    <br>
+                                    {{ servicio.estadoFormateado }}
+                                </span>
+                                <span *ngIf="servicio.estado === 'FINALIZADO'" style="font-size: 15px; font-weight: bold; color: #62AA4A">
+                                    <br>
+                                    {{ servicio.estadoFormateado }}
+                                </span>
+                            </ion-col>
+                            <ion-col size="8" style="font-size: 14px; text-align: left;">
+                                <div style="font-size: 20px;">{{ servicio.mascota.nombre }}</div>
+                                <div style="margin-left: 10px;">{{ servicio.mascota.razaNombre }}</div>
+                                <div style="font-weight: 500;">Pet Shop</div>
+                                <div style="margin-left: 10px;">{{ servicio.tienda.nombre }}</div>
+                                <div style="font-weight: 500;">Fecha Agendada</div>
+                                <div style="margin-left: 10px;">{{ servicio.fechaFormateada }} {{ servicio.horaInicioFormateada }}</div>
+                                <div style="font-weight: 500;">Servicio</div>
+                                <div style="margin-left: 10px; font-size: 11px;">{{ servicio.nombreProductos }}</div>
+                            </ion-col>
+                        </ion-row>
+                        <ion-row style="width: 100%;">
+                            <ion-col size="12" style="font-size: 14px; text-align: left;">
+                                <div style="font-weight: 500;">Observaciones</div>
+                                <div style="margin-left: 10px;">{{ servicio.observaciones }}</div>
+                                <div *ngIf="(servicio.observacionesServicio !== null && servicio.observacionesServicio !== '') || (servicio.motivoRechazo !== null && servicio.motivoRechazo !== '')" style="font-weight: 500;">
+                                    Tommy's
+                                </div>
+                                <div *ngIf="servicio.observacionesServicio !== null && servicio.observacionesServicio !== ''" style="margin-left: 10px;">
+                                    {{ servicio.observacionesServicio }}
+                                </div>
+                                <div *ngIf="servicio.motivoRechazo !== null && servicio.motivoRechazo !== ''" style="margin-left: 10px;">
+                                    {{ servicio.motivoRechazo }}
+                                </div>
+                            </ion-col>
+                        </ion-row>
+                    </ion-row>
+                </ion-item>
+            </ion-list>
+        </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngFor="let multimedia of multimedias" class="ion-card">
+        <img *ngIf="multimedia.tipo === 'IMAGEN' && multimedia.urlSafe !== undefined && multimedia.urlSafe !== null" 
+            [src]="multimedia.urlSafe" 
+            (click)="mostrarMultimedia(multimedia.url)" >
+        
+        <video *ngIf="multimedia.tipo === 'VIDEO'" preload="metadata" controls controlsList="nodownload" width="100%" style="max-height: 350px;">
+            <source [src]="multimedia.urlSafe" type="video/mp4"/>
+        </video>
+
+        <ion-card-content style="font-size: 15px; padding-top: 5px; padding-bottom: 5px;">
+            {{ multimedia.mensaje }}
+        </ion-card-content>
+
+        <ion-footer>
+            <ion-row>
+                <ion-col size="12" class="center">
+                    <button (click)="compartir(multimedia.url)" style="background: transparent;">
+                        <ion-icon name="share-social-outline" style="font-size: 30px; color: #E85929;"></ion-icon>
+                    </button>
+                </ion-col>
+            </ion-row>
+        </ion-footer>
+    </ion-card>
+
+    <ion-fab *ngIf="storageService.tieneRolAseo" vertical="bottom" horizontal="start" style="position:fixed">
+        <ion-fab-button color="secondary" (click)="capturarVideo()">
+            <ion-icon name="videocam-outline"></ion-icon>
+        </ion-fab-button>
+    </ion-fab>
+    <ion-fab *ngIf="storageService.tieneRolAseo" vertical="bottom" horizontal="end" style="position:fixed">
+        <ion-fab-button color="secondary" (click)="capturarFoto()">
+            <ion-icon name="camera"></ion-icon>
+        </ion-fab-button>
+    </ion-fab>
+</ion-content>

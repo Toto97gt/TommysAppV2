@@ -9,7 +9,7 @@ export const environment = {
   host: 'https://dev1.tommysgrooming.pet/tps/',
 
   playStoreUrl: 'https://play.google.com/store/apps/details?id=com.brothersvas.tommyspetshop.app',
-  appStoreUrl: 'https://apps.apple.com/app/idXXXXXXXXX',
+  appStoreUrl: 'https://apps.apple.com/gt/app/tommys-pet-shop/id1566824045',
   packageId: 'com.brothersvas.tommyspetshop.app',
 };
 

@@ -1,0 +1,119 @@
+    <ion-header *ngIf="navegacion === 'ACTUALIZAR'">
+        <ion-toolbar class="header-color" style="font-weight: bold;">
+            <ion-buttons slot="start">
+                <ion-back-button mode="md"></ion-back-button>
+            </ion-buttons>
+            <ion-title>Actualizar Usuario</ion-title>
+        </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="ion-content">
+        <ion-row>
+            <ion-col>
+                <ion-card class="ion-card">
+                    <ion-card-content>
+                        <div *ngIf="navegacion === 'COMPLETAR'" class="center">
+                            <h1 class="title2">Datos Usuario</h1>
+                        </div>
+                        <form [formGroup]="usuarioForm">
+                            <ion-grid>
+                                <ion-row>
+                                    <ion-col>
+                                        <ionic-selectable
+                                            formControlName="tienda" 
+                                            [items]="tiendas"
+                                            itemValueField="id"
+                                            itemTextField="nombre"
+                                            [canSearch]="true"
+                                            placeholder="Pet Shop Favorita"
+                                            class="input">
+                                        </ionic-selectable>
+                                    </ion-col>
+                                </ion-row>
+                                <ion-row>
+                                    <ion-col>
+                                        <ion-input type="text" formControlName="nombres" placeholder="Nombres" class="input"></ion-input>
+                                    </ion-col>
+                                </ion-row>
+                                <ion-row>
+                                    <ion-col>
+                                        <ion-input type="text" formControlName="apellidos" placeholder="Apellidos" class="input"></ion-input>
+                                    </ion-col>
+                                </ion-row>
+                                <ion-row>
+                                    <ion-col>
+                                        <ionic-selectable
+                                            formControlName="esPapa" 
+                                            [items]="sexos"
+                                            itemValueField="id"
+                                            itemTextField="nombre"
+                                            placeholder="Mama / Papa de Peludito"
+                                            class="input">
+                                        </ionic-selectable>
+                                    </ion-col>
+                                </ion-row>
+                                <ion-row>
+                                    <ion-col>
+                                        <ion-input type="number" formControlName="telefono" placeholder="Teléfono" class="input"></ion-input>
+                                    </ion-col>
+                                </ion-row>
+                                <ion-row>
+                                    <ion-col>
+                                        <ion-input type="text" formControlName="direccion" placeholder="Dirección" class="input"></ion-input>
+                                    </ion-col>
+                                </ion-row>
+                                <ion-row>
+                                    <ion-col>
+                                        <ion-input type="number" formControlName="zona" placeholder="Zona" class="input"></ion-input>
+                                    </ion-col>
+                                </ion-row>
+                                <ion-row>
+                                    <ion-col>
+                                        <ionic-selectable
+                                            formControlName="departamento" 
+                                            [items]="departamentos"
+                                            itemValueField="id"
+                                            itemTextField="nombre"
+                                            [canSearch]="true"
+                                            (onChange)="departamentoChange($event)"
+                                            placeholder="Departamento"
+                                            class="input">
+                                        </ionic-selectable>
+                                    </ion-col>
+                                </ion-row>
+                                <ion-row>
+                                    <ion-col>
+                                        <ionic-selectable
+                                            formControlName="municipio" 
+                                            [items]="municipios"
+                                            itemValueField="id"
+                                            itemTextField="nombre"
+                                            [canSearch]="true"
+                                            placeholder="Municipio"
+                                            class="input">
+                                        </ionic-selectable>
+                                    </ion-col>
+                                </ion-row>
+
+                                <ion-row *ngIf="navegacion === 'COMPLETAR'">
+                                    <ion-col size="12" class="center">
+                                        <ion-button shape="round" [disabled]="usuarioForm.invalid" (click)="guardar()">
+                                            Siguiente
+                                        </ion-button>
+                                    </ion-col>
+                                </ion-row>
+
+                                <ion-row *ngIf="navegacion === 'ACTUALIZAR'">
+                                    <ion-col size="12" class="center">
+                                        <ion-button shape="round" [disabled]="usuarioForm.invalid" (click)="actualizar()">
+                                            Guardar
+                                        </ion-button>
+                                    </ion-col>
+                                </ion-row>
+                            </ion-grid>
+                        </form>
+                    </ion-card-content>
+                </ion-card>
+            </ion-col>
+        </ion-row>
+    </ion-content>

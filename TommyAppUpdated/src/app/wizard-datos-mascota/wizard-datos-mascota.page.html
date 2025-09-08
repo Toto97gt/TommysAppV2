@@ -1,0 +1,147 @@
+<ion-header *ngIf="navegacion !== 'COMPLETAR'">
+    <ion-toolbar *ngIf="navegacion === 'AGREGAR'" class="header-color" style="font-weight: bold;">
+        <ion-buttons slot="start">
+            <ion-back-button mode="md"></ion-back-button>
+        </ion-buttons>
+        <ion-title>Agregar Peludito</ion-title>
+    </ion-toolbar>
+    <ion-toolbar *ngIf="navegacion === 'ACTUALIZAR'" class="header-color" style="font-weight: bold;">
+        <ion-buttons slot="start">
+            <ion-back-button mode="md"></ion-back-button>
+        </ion-buttons>
+        <ion-title>Actualizar Peludito</ion-title>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-content">
+    <ion-row>
+        <ion-col size="3"></ion-col>
+        <ion-col size="6" class="center">
+            <img *ngIf="urlFoto === undefined || urlFoto === null" src="../assets/logo.png" class="header-image2" (click)="capturarFoto()">
+            
+            <img *ngIf="urlFoto !== undefined && urlFoto !== null" [src]="urlFoto" class="header-image2" (click)="capturarFoto()">
+        </ion-col>
+        <ion-col size="3"></ion-col>
+    </ion-row>
+    <ion-row>
+        <ion-col>
+            <ion-card class="ion-card">
+                <ion-card-content>
+                    <div *ngIf="navegacion === 'COMPLETAR'" class="center">
+                        <h1 class="title2">Datos Peludito</h1>
+                    </div>
+                    <br>
+                    <ion-row>
+                        <ion-col style="text-align: center;">
+                            <ion-icon name="camera" (click)="capturarFoto()"></ion-icon>
+                        </ion-col>
+                    </ion-row>
+                    <br>
+
+                    <form [formGroup]="mascotaForm">
+                        <ion-grid>
+                           
+                            <ion-row>
+                                <ion-col>
+                                    <ion-input type="text" formControlName="nombre" placeholder="Nombre" class="input"></ion-input>
+                                </ion-col>
+                            </ion-row>
+                            <ion-row>
+                                <ion-col>
+                                    <ion-input type="text" formControlName="fechaNacimiento" placeholder="Fecha Nacimiento (dd-MM-yyyy)" (click)="mostrarCalendario()" class="input"></ion-input>
+                                </ion-col>
+                            </ion-row>
+                            <ion-row>
+                                <ion-col>
+                                    <ionic-selectable
+                                        formControlName="esMacho" 
+                                        [items]="sexos"
+                                        itemValueField="id"
+                                        itemTextField="nombre"
+                                        placeholder="Hembra / Macho"
+                                        class="input">
+                                    </ionic-selectable>
+                                </ion-col>
+                            </ion-row>
+                            <ion-row>
+                                <ion-col>
+                                    <ionic-selectable
+                                        formControlName="tipoMascota" 
+                                        [items]="tipoMascotas"
+                                        itemValueField="id"
+                                        itemTextField="nombre"
+                                        (onChange)="tipoMascotaChange($event)"
+                                        placeholder="Tipo Peludito"
+                                        class="input">
+                                    </ionic-selectable>
+                                </ion-col>
+                            </ion-row>
+                            <ion-row>
+                                <ion-col>
+                                    <ionic-selectable
+                                        formControlName="raza" 
+                                        [items]="razas"
+                                        itemValueField="id"
+                                        itemTextField="nombre"
+                                        [canSearch]="true"
+                                        (onChange)="razaChange($event)"
+                                        placeholder="Raza"
+                                        class="input">
+                                    </ionic-selectable>
+                                </ion-col>
+                            </ion-row>
+                            <ion-row *ngIf="mostrarOtraRaza">
+                                <ion-col>
+                                    <ion-input type="text" formControlName="otraRaza" placeholder="Otra Raza" class="input"></ion-input>
+                                </ion-col>
+                            </ion-row>
+                            <ion-row>
+                                <ion-col>
+                                    <ionic-selectable
+                                        formControlName="enfermedades" 
+                                        [items]="enfermedades"
+                                        itemValueField="id"
+                                        itemTextField="nombre"
+                                        [canSearch]="true"
+                                        [isMultiple]="true"
+                                        (onChange)="enfermedadChange($event)"
+                                        placeholder="Enfermedades / Alergias"
+                                        class="input">
+                                    </ionic-selectable>
+                                </ion-col>
+                            </ion-row>
+                            <ion-row *ngIf="mostrarOtraEnfermedad">
+                                <ion-col>
+                                    <ion-input type="text" formControlName="otraEnfermedad" placeholder="Otra Enfermedad" class="input"></ion-input>
+                                </ion-col>
+                            </ion-row>
+
+                            <ion-row *ngIf="navegacion === 'COMPLETAR'">
+                                <ion-col size="6" class="center">
+                                    <ion-button shape="round" (click)="regresar()" color="secondary">
+                                        Regresar
+                                    </ion-button>
+                                </ion-col>
+                                <ion-col size="6" class="center">
+                                    <ion-button shape="round" [disabled]="mascotaForm.invalid" (click)="guardar()">
+                                        Finalizar
+                                    </ion-button>
+                                </ion-col>
+                            </ion-row>
+
+                            <ion-row *ngIf="navegacion !== 'COMPLETAR'">
+                                <ion-col size="3"></ion-col>
+                                <ion-col size="6" class="center">
+                                    <ion-button shape="round" [disabled]="mascotaForm.invalid && !(urlFoto !== undefined && urlFoto !== null)" (click)="guardar()">
+                                        Guardar
+                                    </ion-button>
+                                </ion-col>
+                                <ion-col size="3"></ion-col>
+                            </ion-row>
+                        </ion-grid>
+                    </form>
+                </ion-card-content>
+            </ion-card>
+        </ion-col>
+    </ion-row>
+</ion-content>

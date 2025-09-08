@@ -28,10 +28,6 @@ export class RestApiService {
     this.apiPublic = environment.host + 'apiPublic/v2/';
   }
 
-  // -------------------
-  // HEADERS / AUTH
-  // -------------------
-
   getHttpHeadersBasic() {
     return new HttpHeaders()
       .set('Authorization', 'Basic ' + btoa(environment.appC + ':' + environment.appS))
@@ -69,10 +65,6 @@ export class RestApiService {
     });
   }
 
-  // -------------------
-  // HTTP HELPERS
-  // -------------------
-
   postApi(url: string, data: any) {
     return new Promise(resolve => {
       if (this.networkService.getCurrentNetworkStatus() === ConnectionStatus.Online) {
@@ -104,7 +96,6 @@ export class RestApiService {
   }
 
   postFileApi(url: string, data: any) {
-    // Igual que postApi, pero mantengo método por compatibilidad
     return new Promise(resolve => {
       if (this.networkService.getCurrentNetworkStatus() === ConnectionStatus.Online) {
         this.getHttpHeadersOnlyToken().then((headers: HttpHeaders | null) => {
@@ -151,10 +142,6 @@ export class RestApiService {
     });
   }
 
-  /**
-   * Descarga directa de URL y guarda en sandbox (Directory.Data).
-   * Mantiene la firma (urlFile, localUrl) pero localUrl solo se usa para derivar nombre.
-   */
   downloadFile(urlFile: string, localUrl: string) {
     return new Promise(resolve => {
       if (this.networkService.getCurrentNetworkStatus() === ConnectionStatus.Online) {
@@ -174,10 +161,6 @@ export class RestApiService {
       }
     });
   }
-
-  // -------------------
-  // AUTH / REGISTRO
-  // -------------------
 
   registrar(data: { correo: string; password: string; }) {
     return new Promise(resolve => {
@@ -338,7 +321,6 @@ export class RestApiService {
   }
 
   private async almacenarDatosUsuario(datosUsuario: any) {
-    // ✅ Reemplazo AppVersion.getVersionNumber() por App.getInfo()
     try {
       const info = await App.getInfo(); // { name, id, version, build }
       const versionLocal = parseFloat(info.version || '0');
@@ -398,10 +380,6 @@ export class RestApiService {
     });
   }
 
-  // -------------------
-  // UI / MARKET
-  // -------------------
-
   alertaNuevaVersion() {
     const opciones = {
       idAlert: 'GUARDAR_FINALIZAR',
@@ -419,7 +397,6 @@ export class RestApiService {
   }
 
   private async openStore() {
-    // Intenta con environment.* si existen, si no, usa packageId para Play Store
     try {
       let url: string | undefined;
 
@@ -430,7 +407,6 @@ export class RestApiService {
       } else if (Capacitor.getPlatform() === 'ios') {
         url = environment.appStoreUrl || 'https://apps.apple.com/';
       } else {
-        // Web / fallback
         url = environment.playStoreUrl || environment.appStoreUrl || 'https://play.google.com/';
       }
 
@@ -440,10 +416,6 @@ export class RestApiService {
     }
   }
 
-  // -------------------
-  // HELPERS FILES
-  // -------------------
-
   private async writeBlobToDataDir(filename: string, blob: Blob): Promise<string> {
     const base64 = await this.blobToBase64(blob);
     const write = await Filesystem.writeFile({
@@ -451,7 +423,7 @@ export class RestApiService {
       data: base64,
       directory: Directory.Data
     });
-    return write.uri; // filesystem://...
+    return write.uri; 
   }
 
   private async blobToBase64(blob: Blob): Promise<string> {
