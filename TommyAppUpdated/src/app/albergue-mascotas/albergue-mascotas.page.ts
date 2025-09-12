@@ -17,7 +17,7 @@ export class AlbergueMascotasPage implements OnInit {
     pagina = 0;
     mostrarMas = false;
 
-    albergue;
+    albergue: any;
 
     constructor(
         private navController: NavController,

@@ -1,70 +1,83 @@
 import { Component, OnInit } from '@angular/core';
-import { CallNumber } from '@ionic-native/call-number/ngx';
 import { NavController } from '@ionic/angular';
 import { AlertasService } from 'src/services/alertas.service';
 import { GpsService } from 'src/services/gps.service';
 import { ConnectionStatus, NetworkService } from 'src/services/network.service';
 import { RestApiService } from 'src/services/restApi.service';
 import { StorageService } from 'src/services/storage.service';
+import { AppLauncher } from '@capacitor/app-launcher';
+import { Capacitor } from '@capacitor/core';
 
 @Component({
-    selector: 'app-albergue-lista',
-    templateUrl: './albergue-lista.page.html',
-    styleUrls: ['./albergue-lista.page.scss'],
+  selector: 'app-albergue-lista',
+  templateUrl: './albergue-lista.page.html',
+  styleUrls: ['./albergue-lista.page.scss'],
 })
 export class AlbergueListaPage implements OnInit {
 
-    albergues = [];
+  albergues: any[] = [];
 
-    constructor(
-        private navController: NavController,
-        private callNumber: CallNumber,
-        private alertasService: AlertasService,
-        private storageService: StorageService,
-        private networkService: NetworkService,
-        private restApiService: RestApiService,
-        private gpsService: GpsService
-    ) { }
+  constructor(
+    private navController: NavController,
+    private alertasService: AlertasService,
+    private storageService: StorageService,
+    private networkService: NetworkService,
+    private restApiService: RestApiService,
+    private gpsService: GpsService
+  ) {}
 
-    ngOnInit() {
-    }
+  ngOnInit() {}
 
-    ionViewWillEnter(){
-        this.albergues = [];
-        if (this.networkService.getCurrentNetworkStatus() === ConnectionStatus.Online) {
-            this.alertasService.presentLoading('');
+  ionViewWillEnter(): void {
+    this.albergues = [];
 
-            this.restApiService.postApiPublic('albergue/lista', null).then((respuesta: any) => {
-                if (respuesta.exitoso) {
-                    this.albergues = respuesta.datos.albergues;
-                } else {
-                    console.error('No se han podido cargar los albergues', respuesta);
-                }
+    if (this.networkService.getCurrentNetworkStatus() === ConnectionStatus.Online) {
+      this.alertasService.presentLoading('');
 
-                this.alertasService.dismissLoading();
-            });
+      this.restApiService.postApiPublic('albergue/lista', null).then((respuesta: any) => {
+        if (respuesta?.exitoso) {
+          this.albergues = respuesta.datos?.albergues ?? [];
         } else {
-            this.storageService.getItemObject('albergues').then((albergues: any) => {
-                if(albergues !== null){
-                    this.albergues = albergues;
-                }else{
-                    this.albergues = [];
-                }
-            });
+          console.error('No se han podido cargar los albergues', respuesta);
         }
-    }
 
-    goListaMascotas(albergue){
-        this.storageService.setItemObject('albergue', albergue).then(resultado => {
-            this.navController.navigateForward('/albergue-mascotas');    
-        });
+        this.alertasService.dismissLoading();
+      });
+    } else {
+      this.storageService.getItemObject('albergues').then((albergues: any) => {
+        this.albergues = Array.isArray(albergues) ? albergues : [];
+      });
     }
+  }
 
-    comoLlegar(latitud, longitud) {
-        this.gpsService.comoLlegar(latitud, longitud);
-    }
+  goListaMascotas(albergue: any): void {
+    this.storageService.setItemObject('albergue', albergue).then(() => {
+      this.navController.navigateForward('/albergue-mascotas');
+    });
+  }
 
-    llamar(telefono: string){
-        this.callNumber.callNumber(telefono.toString(), true);
+  comoLlegar(latitud: number, longitud: number): void {
+    this.gpsService.comoLlegar(latitud, longitud);
+  }
+
+  async llamar(telefono: string): Promise<void> {
+    const url = `tel:${telefono}`;
+
+    try {
+      if (Capacitor.getPlatform() === 'web') {
+        window.location.href = url;
+        return;
+      }
+
+      const can = await AppLauncher.canOpenUrl({ url });
+      if (can.value) {
+        await AppLauncher.openUrl({ url });
+      } else {
+        // Fallback
+        window.location.href = url;
+      }
+    } catch {
+      window.location.href = url;
     }
+  }
 }

@@ -54,7 +54,7 @@ export class MascotaListaPage implements OnInit {
         this.navController.navigateForward('/wizard-datos-mascota');
     }
 
-    goActualizar(mascota){
+    goActualizar(mascota: any){
         this.storageService.setItem('mascota-navegacion', 'ACTUALIZAR');
         this.storageService.setItemObject('mascota', mascota);
 
