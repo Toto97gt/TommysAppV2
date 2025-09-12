@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
-import { IonicSelectableModule } from 'ionic-selectable';
+import { IonicSelectableComponent } from 'ionic-selectable';
 import { WizardDatosMascotaPageRoutingModule } from './wizard-datos-mascota-routing.module';
 import { WizardDatosMascotaPage } from './wizard-datos-mascota.page';
 
@@ -12,7 +12,7 @@ import { WizardDatosMascotaPage } from './wizard-datos-mascota.page';
         FormsModule,
         IonicModule,
         ReactiveFormsModule,
-        IonicSelectableModule,
+        IonicSelectableComponent,
         WizardDatosMascotaPageRoutingModule
     ],
     declarations: [WizardDatosMascotaPage]

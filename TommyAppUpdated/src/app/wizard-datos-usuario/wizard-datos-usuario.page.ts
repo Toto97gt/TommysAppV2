@@ -61,7 +61,6 @@ export class WizardDatosUsuarioPage implements OnInit {
   ) {}
 
   async ngOnInit() {
-    // Form reactivo tipado
     this.usuarioForm = this.fb.group<UsuarioForm>({
       tienda: this.fb.control<Opcion | null>(null, { validators: Validators.required }),
       nombres: this.fb.control<string>('', { validators: Validators.required, nonNullable: true }),
@@ -74,14 +73,11 @@ export class WizardDatosUsuarioPage implements OnInit {
       municipio: this.fb.control<Opcion | null>(null, { validators: Validators.required }),
     });
 
-    // Limpieza previa (no necesitamos await aquí)
     this.storageService.removeItem('mascota');
     this.storageService.removeItem('datosUsuario');
 
-    // Catálogos en memoria
     this.sexos = [{ id: false, nombre: 'Mama' }, { id: true, nombre: 'Papa' }];
 
-    // Carga catálogos desde Storage
     const [departamentos, tiendas] = await Promise.all([
       this.storageService.getItemObject('departamentos'),
       this.storageService.getItemObject('tiendas'),
@@ -89,7 +85,6 @@ export class WizardDatosUsuarioPage implements OnInit {
     this.departamentos = departamentos ?? [];
     this.tiendas = tiendas ?? [];
 
-    // Navegación/flujo
     this.navegacion = await this.storageService.getItem('usuario-navegacion');
 
     if (this.navegacion === 'ACTUALIZAR') {
@@ -118,11 +113,10 @@ export class WizardDatosUsuarioPage implements OnInit {
   }
 
   async guardar() {
-    // Mantengo el mismo shape que ya usas en tu flujo original
     const datosUsuario = {
       nombres: this.usuarioForm.controls.nombres.value,
       apellidos: this.usuarioForm.controls.apellidos.value,
-      esPapa: this.usuarioForm.controls.esPapa.value, // (dejas el objeto Sexo como antes)
+      esPapa: this.usuarioForm.controls.esPapa.value,
       telefono: this.usuarioForm.controls.telefono.value,
       direccion: this.usuarioForm.controls.direccion.value,
       zona: this.usuarioForm.controls.zona.value,
@@ -142,7 +136,7 @@ export class WizardDatosUsuarioPage implements OnInit {
       id: this.usuario?.id,
       nombres: this.usuarioForm.controls.nombres.value,
       apellidos: this.usuarioForm.controls.apellidos.value,
-      esPapa: this.usuarioForm.controls.esPapa.value, // (misma compat)
+      esPapa: this.usuarioForm.controls.esPapa.value,
       telefono: this.usuarioForm.controls.telefono.value,
       direccion: this.usuarioForm.controls.direccion.value,
       zona: this.usuarioForm.controls.zona.value,

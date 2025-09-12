@@ -9,7 +9,7 @@ import { StorageService } from 'src/services/storage.service';
 })
 export class TabsServicioPage implements OnInit {
 
-    @ViewChild('tabs', { static: true }) tabsRef: IonTabs;
+    @ViewChild('tabs', { static: true }) tabsRef!: IonTabs;
 
     constructor(public storageService: StorageService) {}
 

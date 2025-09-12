@@ -11,7 +11,7 @@ import { StorageService } from 'src/services/storage.service';
 })
 export class TabsInicioPage implements OnInit {
 
-    @ViewChild('tabs', { static: true }) tabsRef: IonTabs;
+    @ViewChild('tabs', { static: true }) tabsRef!: IonTabs;
 
     constructor(
         private fCMService: FCMService,

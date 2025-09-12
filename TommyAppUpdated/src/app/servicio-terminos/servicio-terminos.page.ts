@@ -8,7 +8,7 @@ import { StorageService } from 'src/services/storage.service';
 })
 export class ServicioTerminosPage implements OnInit {
 
-    terminos;
+    terminos: any;
 
     constructor(
         private storageService: StorageService,
