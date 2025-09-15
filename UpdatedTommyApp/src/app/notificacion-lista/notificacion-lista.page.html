@@ -1,0 +1,29 @@
+<ion-header>
+    <ion-toolbar class="header-color" style="text-align: center;">
+        <ion-title>Notificaciones</ion-title>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-content" style="margin-inline: 0px;">
+    <ion-card *ngFor="let notificacion of notificaciones" class="ion-card">
+        <img *ngIf="notificacion.urlFotoSafe !== undefined && notificacion.urlFotoSafe !== null && notificacion.urlFotoSafe !== '' && notificacion.tipoArchivo == 'IMAGEN'" [src]="notificacion.urlFotoSafe">
+
+        <ion-card-header style="padding: 0px; padding-top: 10px; padding-left: 10px; padding-right: 10px;">
+            <ion-card-subtitle>{{ notificacion.nombre }}</ion-card-subtitle>
+        </ion-card-header>
+
+        <ion-card-content style="font-size: 13px;">
+            {{ notificacion.mensaje }}
+        </ion-card-content>
+        
+        <ion-card-header style="padding: 0; padding-left: 10px; padding-right: 15px;">
+            <ion-card-subtitle style="font-size: 10px; text-align: right;">{{notificacion.fechaRegistroFormateada}}</ion-card-subtitle>
+        </ion-card-header>
+    </ion-card> 
+
+    <ion-row *ngIf="mostrarMas" style="width: 100%; height: 50px;">
+        <ion-col size="12" class="center" (click)="cargarMas()">
+            <ion-icon name="arrow-down-outline" style="font-size: 35px;"></ion-icon>
+        </ion-col>
+    </ion-row>
+</ion-content>

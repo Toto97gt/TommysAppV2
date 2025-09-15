@@ -1,0 +1,56 @@
+<ion-header>
+    <ion-toolbar class="header-color" style="font-weight: bold;">
+        <ion-buttons slot="start">
+            <ion-back-button mode="md"></ion-back-button>
+        </ion-buttons>
+        <ion-title>Mis Peluditos</ion-title>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-content">
+    <ion-card class="ion-card">
+        <ion-card-content>
+            <ion-list>
+                <ion-item *ngFor="let mascota of mascotas" (click)="goActualizar(mascota)">
+                    <ion-row style="width: 100%;">
+                        <ion-col size="4" class="center">
+                            <img *ngIf="mascota.urlFotoSafe !== undefined && mascota.urlFotoSafe !== null" [src]="mascota.urlFotoSafe" class="header-image">
+                            <img *ngIf="mascota.urlFotoSafe === undefined || mascota.urlFotoSafe === null" src="../assets/logo.png" class="header-image">
+                        </ion-col>
+                        <ion-col size="8" style="font-size: 14px; text-align: left;">
+                            <div style="font-size: 20px;">{{ mascota.nombre }}</div>
+                            <div style="margin-left: 10px;">{{ mascota.razaNombre }}</div>
+                            <div style="margin-left: 10px;" *ngIf="aseos !== undefined && aseos !== null && aseos > 0">
+                                Grooming:
+                                <span *ngFor="let item of [].constructor(aseos); let i = index">
+                                    <ion-icon *ngIf="(i+1) > mascota.aseos" name="star-outline"></ion-icon>
+                                    <ion-icon *ngIf="(i+1) <= mascota.aseos" color="secondary" name="star-outline"></ion-icon>
+                                </span>
+                            </div>
+                            <div style="margin-left: 10px;" *ngIf="paseos !== undefined && paseos !== null && paseos > 0">
+                                Dog Walker:
+                                <span *ngFor="let item of [].constructor(paseos); let i = index">
+                                    <ion-icon *ngIf="(i+1) > mascota.paseos" name="star-outline"></ion-icon>
+                                    <ion-icon *ngIf="(i+1) <= mascota.paseos" color="secondary" name="star-outline"></ion-icon>
+                                </span>
+                            </div>
+                        </ion-col>
+                    </ion-row>
+                </ion-item>
+
+                <ion-item *ngIf="mascotas.length == 0">
+                    <ion-row style="width: 100%;">
+                        <ion-col size="12" class="center">
+                            No se encontron peluditos.
+                        </ion-col>
+                    </ion-row>
+                </ion-item>
+            </ion-list>
+        </ion-card-content>
+    </ion-card>
+    <ion-fab vertical="bottom" horizontal="end" style="position:fixed">
+        <ion-fab-button color="secondary" (click)="goAgregar()">
+            <ion-icon name="add"></ion-icon>
+        </ion-fab-button>
+    </ion-fab>
+</ion-content>

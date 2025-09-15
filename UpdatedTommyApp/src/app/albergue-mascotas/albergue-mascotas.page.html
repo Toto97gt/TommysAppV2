@@ -1,0 +1,36 @@
+<ion-header>
+    <ion-toolbar class="header-color" style="font-weight: bold;">
+        <ion-buttons slot="start">
+            <ion-back-button mode="md"></ion-back-button>
+        </ion-buttons>
+        <ion-title>Peluditos</ion-title>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-content">
+    <ion-card *ngFor="let mascota of mascotas" class="ion-card">
+        <img *ngIf="mascota.multimedias[0].url !== undefined && mascota.multimedias[0].url !== null" [src]="mascota.multimedias[0].url">
+        
+        <ion-card-header style="padding-top: 0px; padding-bottom: 0px;">
+            <ion-card-title>{{mascota.nombre}}</ion-card-title>
+        </ion-card-header>
+
+        <ion-card-content>
+            <ion-row>
+                <ion-col size="12" style="font-size: 14px; text-align: left;">
+                    <div>
+                        {{ mascota.esMacho ? 'Macho' : 'Hembra' }} con {{ mascota.edad }} de edad, 
+                        pesa {{ mascota.peso }} libras, {{ mascota.esterilizado ? 'si' : 'no' }} esta esterilizado.
+                    </div>
+                    <div>Observaciones: {{ mascota.observaciones }}</div>
+                </ion-col>
+            </ion-row>
+        </ion-card-content>
+    </ion-card>
+
+    <ion-row *ngIf="mostrarMas" style="width: 100%;">
+        <ion-col size="12" class="center" (click)="cargarMas()">
+            <ion-icon name="arrow-down-outline"></ion-icon>
+        </ion-col>
+    </ion-row>
+</ion-content>

@@ -1,0 +1,39 @@
+<ion-header>
+    <ion-toolbar class="header-color" style="text-align: center;">
+        <ion-title>Albergues</ion-title>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-content">
+    <ion-card *ngFor="let albergue of albergues" class="ion-card">
+        <img *ngIf="albergue.urlFoto !== undefined && albergue.urlFoto !== null" [src]="albergue.urlFoto" (click)="goListaMascotas(albergue)">
+        <img *ngIf="albergue.urlFoto === undefined || albergue.urlFoto === null" src="../assets/logo.png" (click)="goListaMascotas(albergue)">
+        
+        <ion-card-header style="padding-top: 0px; padding-bottom: 0px;" (click)="goListaMascotas(albergue)">
+            <ion-card-title>{{albergue.nombre}}</ion-card-title>
+        </ion-card-header>
+
+        <ion-card-content (click)="goListaMascotas(albergue)">
+            <ion-row>
+                <ion-col size="12" style="font-size: 14px; text-align: left;">
+                    <div>{{ albergue.direccion }}, tel&eacute;fonos {{ albergue.telefono }} y {{ albergue.celular }}.</div>
+                </ion-col>
+            </ion-row>
+        </ion-card-content>
+
+        <ion-footer>
+            <ion-row>
+                <ion-col size="6" class="center">
+                    <button (click)="comoLlegar(albergue.latitud, albergue.longitud)" style="background: transparent;">
+                        <ion-icon name="navigate-outline" style="font-size: 30px; color: #E85929"></ion-icon>
+                    </button>
+                </ion-col>
+                <ion-col size="6" class="center">
+                    <button (click)="llamar(albergue.telefono)" style="background: transparent;">
+                        <ion-icon name="call-outline" style="font-size: 30px; color: #E85929;"></ion-icon>
+                    </button>
+                </ion-col>
+            </ion-row>
+        </ion-footer>
+    </ion-card>
+</ion-content>

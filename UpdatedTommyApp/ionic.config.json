@@ -1,0 +1,7 @@
+{
+  "name": "UpdatedTommyApp",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

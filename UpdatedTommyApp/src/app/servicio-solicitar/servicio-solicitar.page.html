@@ -1,0 +1,107 @@
+<ion-header>
+    <ion-toolbar class="header-color" style="font-weight: bold;">
+        <ion-buttons slot="start">
+            <ion-button mode="md" (click)="regresar()">
+                <ion-icon slot="icon-only" name="arrow-back" style="color: white;"></ion-icon>
+            </ion-button>
+        </ion-buttons>
+        <ion-title>
+            <span *ngIf="tipoProducto === 'ASEO'">Solicitar Grooming SPA</span>
+            <span *ngIf="tipoProducto === 'PASEO'">Solicitar Dog Walker</span>
+        </ion-title>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-content">
+    <ion-row>
+        <ion-col size="12">
+            <ion-card class="ion-card">
+                <ion-card-content>
+                    <div class="center">
+                        <h2 class="title3">Fecha: {{ horario.fecha }} Hora: {{ horario.hora }}</h2> 
+                        <h2 class="title3">Pet Shop {{ horario.tienda.nombre }}</h2>
+                        <h2 class="title3">Espacio Disponible {{ disponible }}</h2>
+                    </div>
+                    
+                    <br>
+                    <form [formGroup]="servicioForm">
+                        <ion-list>
+                            <ion-item *ngFor="let mascota of mascotas" (click)="seleccionarMascota(mascota)">
+                                <ion-row style="width: 100%;">
+                                    <ion-col size="4" class="center">
+                                        <img *ngIf="mascota.urlFotoSafe !== undefined && mascota.urlFotoSafe !== null" [src]="mascota.urlFotoSafe" class="header-image3">
+                                        <img *ngIf="mascota.urlFotoSafe === undefined || mascota.urlFotoSafe === null" src="../assets/logo.png" class="header-image3">
+                                    </ion-col>
+                                    <ion-col size="7" style="font-size: 13px; text-align: left;">
+                                        <span style="font-size: 20px;">{{ mascota.nombre }}</span>
+                                        <br>
+                                        {{ mascota.razaNombre }}
+                                    </ion-col>
+                                    <ion-col size="1" *ngIf="mascota.seleccionada" size="1" class="right">
+                                        <ion-icon name="checkmark-circle" style="color: green; font-size: 20px;"></ion-icon>
+                                    </ion-col>
+                                </ion-row>
+                            </ion-item>
+                        </ion-list>
+                        <ion-row *ngIf="tipoProducto == 'ASEO'">
+                            <ion-col>
+                                <ion-item>
+                                    <ion-label>Grooming SPA</ion-label>
+                                    <ion-toggle formControlName="esGrooming" (ionChange)="seleccionarGrooming($event)"></ion-toggle>
+                                </ion-item>
+                            </ion-col>
+                        </ion-row>
+                        <ion-row *ngIf="tipoProducto == 'ASEO'">
+                            <ion-col>
+                                <ion-item>
+                                    <ion-label>Solo Ba&ntilde;o</ion-label>
+                                    <ion-toggle formControlName="esBanio" (ionChange)="seleccionarBanio($event)"></ion-toggle>
+                                </ion-item>
+                            </ion-col>
+                        </ion-row>
+                        <ion-row>
+                            <ion-col>
+                                <ion-item>
+                                    <ion-label>Servicio a Domicilio</ion-label>
+                                    <ion-toggle formControlName="esDomicilio" (ionChange)="servicioDomicilio($event)"></ion-toggle>
+                                </ion-item>
+                            </ion-col>
+                        </ion-row>
+                        <ion-row *ngIf="esDomicilio">
+                            <ion-col>
+                                <ion-item>
+                                    <ion-label>Compartir Ubicaci&oacute;n Actual</ion-label>
+                                    <ion-toggle formControlName="ubicacion" (ionChange)="obtenerCoordenadas($event)"></ion-toggle>
+                                </ion-item>
+                            </ion-col>
+                        </ion-row>
+                        <ion-row>
+                            <ion-col>
+                                <ion-textarea formControlName="observaciones" placeholder="Observaciones" class="input"></ion-textarea>
+                            </ion-col>
+                        </ion-row>
+                        <ion-row>
+                            <ion-col>
+                                <ion-item>
+                                    <ion-label>
+                                        <ion-router-link [routerLink]="['/servicio-terminos']" style="font-size: 12px; font-weight: bold;">
+                                            Aceptar T&eacute;rminos y Condiciones
+                                        </ion-router-link>
+                                    </ion-label>
+                                    <ion-toggle formControlName="aceptaTerminos"></ion-toggle>
+                                </ion-item>
+                            </ion-col>
+                        </ion-row>
+                        <ion-row>
+                            <ion-col size="12" class="center">
+                                <ion-button shape="round" [disabled]="servicioForm.invalid || idMascotas.length == 0" (click)="solicitar()">
+                                    Solicitar
+                                </ion-button>
+                            </ion-col>
+                        </ion-row>
+                    </form>
+                </ion-card-content>
+            </ion-card>
+        </ion-col>
+    </ion-row>
+</ion-content>

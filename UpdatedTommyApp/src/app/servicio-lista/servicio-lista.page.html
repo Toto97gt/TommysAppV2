@@ -1,0 +1,194 @@
+<ion-header>
+    <ion-toolbar class="header-color" style="font-weight: bold;">
+        <ion-buttons slot="start">
+            <ion-button (click)="regresar()">
+                <ion-icon slot="icon-only" name="arrow-back" style="color: white;"></ion-icon>
+            </ion-button>
+        </ion-buttons>
+        <ion-title>
+            <span *ngIf="tipoProducto === 'ASEO'">Grooming SPA</span>
+            <span *ngIf="tipoProducto === 'PASEO'">Dog Walker</span>
+        </ion-title>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-content">
+    <ion-card *ngIf="storageService.tieneRolCliente" class="ion-card">
+        <ion-segment (ionChange)="segmentChanged($event)" [value]="segmento">
+            <ion-segment-button value="agendados">
+                <ion-label>Agendados</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="historial">
+                <ion-label>Historial</ion-label>
+            </ion-segment-button>
+        </ion-segment>
+
+        <ion-card-content>
+            <ion-list>
+                <ion-item *ngFor="let servicio of servicios">
+                    <ion-row style="width: 100%;">
+                        <ion-col size="4" class="center" (click)="goDetalle(servicio)">
+                            <img *ngIf="servicio.mascota.urlFotoSafe !== undefined && servicio.mascota.urlFotoSafe !== null" [src]="servicio.mascota.urlFotoSafe" class="header-image">
+                            <img *ngIf="servicio.mascota.urlFotoSafe === undefined || servicio.mascota.urlFotoSafe === null" src="../assets/logo.png" class="header-image">
+
+                            <span style="font-size: 12px; font-weight: bold; color: #62AA4A">
+                                <br>
+                                {{ servicio.tipoProductoEtiqueta }}
+                            </span>
+                            <span *ngIf="servicio.esGratis" style="font-size: 15px; font-weight: bold; color: #62AA4A">
+                                <br>
+                                Gratis
+                            </span>
+                            <span *ngIf="servicio.estado === 'SOLICITUD'" style="font-size: 15px; font-weight: bold;">
+                                <br>
+                                {{ servicio.estadoFormateado }}
+                            </span>
+                            <span *ngIf="servicio.estado === 'EN_PROCESO'" style="font-size: 15px; font-weight: bold; color: #E85929">
+                                <br>
+                                {{ servicio.estadoFormateado }}
+                            </span>
+                            <span *ngIf="servicio.estado === 'RECHAZADO'" style="font-size: 15px; font-weight: bold; color: red">
+                                <br>
+                                {{ servicio.estadoFormateado }}
+                            </span>
+                            <span *ngIf="servicio.estado === 'FINALIZADO'" style="font-size: 15px; font-weight: bold; color: #62AA4A">
+                                <br>
+                                {{ servicio.estadoFormateado }}
+                            </span>
+                        </ion-col>
+                        <ion-col size="8" style="font-size: 14px; text-align: left;">
+                            <div style="font-size: 20px;">{{ servicio.mascota.nombre }}</div>
+                            <div style="margin-left: 10px;">{{ servicio.mascota.razaNombre }}</div>
+                            <div style="font-weight: 500;">Pet Shop</div>
+                            <div style="margin-left: 10px;">{{ servicio.tienda.nombre }}</div>
+                            <div style="font-weight: 500;">Fecha Agendada</div>
+                            <div style="margin-left: 10px;">{{ servicio.fechaFormateada }} {{ servicio.horaInicioFormateada }}</div>
+
+                            <ion-icon *ngIf="servicio.estado === 'SOLICITUD'" (click)="confirmarCancelar(servicio)" class="icon-cancelar" name="trash-outline" color="danger"></ion-icon>
+                        </ion-col>
+                    </ion-row>
+                </ion-item>
+
+                <ion-item *ngIf="servicios.length == 0">
+                    <ion-row style="width: 100%;">
+                        <ion-col size="12" class="center">
+                            No se encontron registros.
+                        </ion-col>
+                    </ion-row>
+                </ion-item>
+            </ion-list>
+
+            <ion-row *ngIf="mostrarMas" style="width: 100%;">
+                <ion-col size="12" class="center" (click)="cargarMas()">
+                    <ion-icon name="arrow-down-outline"></ion-icon>
+                </ion-col>
+            </ion-row>
+        </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="storageService.tieneRolAseo || storageService.tieneRolPiloto" class="ion-card">
+        <ion-segment (ionChange)="segmentChanged($event)" [value]="segmento">
+            <ion-segment-button value="agendados">
+                <ion-label>Por Fecha</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="historial" *ngIf="storageService.tieneRolAseo">
+                <ion-label>Historial</ion-label>
+            </ion-segment-button>
+        </ion-segment>
+
+        <ion-card-content>
+            <div *ngIf="segmento === 'agendados'" class="center">
+                <h1 class="title3">Fecha {{ fecha }}</h1>
+            </div>
+            <br>
+            
+            
+                    <ion-row style="width: 100%;" *ngFor="let servicio of servicios">
+                        <ion-col size="4" class="center" (click)="goDetalle(servicio)">
+                            <img *ngIf="servicio.mascota.urlFotoSafe !== undefined && servicio.mascota.urlFotoSafe !== null" [src]="servicio.mascota.urlFotoSafe" class="header-image">
+                            <img *ngIf="servicio.mascota.urlFotoSafe === undefined || servicio.mascota.urlFotoSafe === null" src="../assets/logo.png" class="header-image">
+
+                            <span *ngIf="servicio.esGratis" style="font-size: 15px; font-weight: bold; color: #62AA4A">
+                                <br>
+                                Gratis
+                            </span>
+                            <span *ngIf="servicio.estado === 'SOLICITUD'" style="font-size: 15px; font-weight: bold;">
+                                <br>
+                                {{ servicio.estadoFormateado }}
+                            </span>
+                            <span *ngIf="servicio.estado === 'EN_PROCESO'" style="font-size: 15px; font-weight: bold; color: #E85929">
+                                <br>
+                                {{ servicio.estadoFormateado }}
+                            </span>
+                            <span *ngIf="servicio.estado === 'RECHAZADO'" style="font-size: 15px; font-weight: bold; color: red">
+                                <br>
+                                {{ servicio.estadoFormateado }}
+                            </span>
+                            <span *ngIf="servicio.estado === 'FINALIZADO'" style="font-size: 15px; font-weight: bold; color: #62AA4A">
+                                <br>
+                                {{ servicio.estadoFormateado }}
+                            </span>
+
+                            <ion-chip color="primary" outline="true" (click)="llamar(servicio.telefono1)" *ngIf="storageService.tieneRolPiloto && servicio.telefono1 != null">
+                                <ion-label>{{ servicio.telefono1 }}</ion-label>
+                                <ion-icon name="call-outline"></ion-icon>
+                            </ion-chip>
+
+                            <ion-chip color="primary" outline="true" (click)="llamar(servicio.telefono2)" *ngIf="storageService.tieneRolPiloto && servicio.telefono2 != null">
+                                <ion-label>{{ servicio.telefono2 }}</ion-label>
+                                <ion-icon name="call-outline"></ion-icon>
+                            </ion-chip>
+                        </ion-col>
+                        <ion-col size="8" style="font-size: 14px; text-align: left;">
+                            <div style="font-size: 20px;">{{ servicio.mascota.nombre }}</div>
+                            <div style="margin-left: 10px;">{{ servicio.mascota.razaNombre }}</div>
+                            <div style="font-weight: 500;">Pet Shop</div>
+                            <div style="margin-left: 10px;">{{ servicio.tienda.nombre }}</div>
+                            <div style="font-weight: 500;">Fecha Agendada</div>
+                            <div style="margin-left: 10px;">{{ servicio.fechaFormateada }} {{ servicio.horaInicioFormateada }}</div>
+                            <div style="font-weight: 500;" *ngIf="storageService.tieneRolPiloto">Direcci&oacute;n</div>
+                            <div style="margin-left: 10px; font-size: 11px;" *ngIf="storageService.tieneRolPiloto">{{ servicio.direccion }}</div>
+                            <div style="font-weight: 500;" *ngIf="storageService.tieneRolPiloto">Tel&eacute;fono</div>
+                            <div style="margin-left: 10px; font-size: 11px;" *ngIf="storageService.tieneRolPiloto">{{ servicio.telefonos }}</div>
+                            <div style="font-weight: 500;">Servicio</div>
+                            <div style="margin-left: 10px; font-size: 11px;">{{ servicio.nombreProductos }}</div>
+
+                            <ion-chip color="primary" outline="true" (click)="comoLlegar(servicio.latitud, servicio.longitud)" *ngIf="storageService.tieneRolPiloto">
+                                <ion-label>Como Llegar</ion-label>
+                                <ion-icon name="navigate"></ion-icon>
+                            </ion-chip>
+                            <div style="width: 100%;  text-align: right;" *ngIf="storageService.tieneRolAseo">
+                                <ion-button *ngIf="servicio.estado == 'SOLICITUD'" shape="round" size="small" (click)="confirmarCambiarEstadoServicio(servicio, true)">
+                                    Iniciar
+                                </ion-button>
+                                <ion-button *ngIf="servicio.estado == 'EN_PROCESO'" shape="round" size="small" (click)="confirmarCambiarEstadoServicio(servicio, false)">
+                                    Finalizar
+                                </ion-button>
+                            </div>
+                        </ion-col>
+                        <hr style="border-top: 1px solid">
+                    </ion-row>
+                
+
+
+                    <ion-row style="width: 100%;" *ngIf="servicios.length == 0">
+                        <ion-col size="12" class="center">
+                            No se encontron registros.
+                        </ion-col>
+                    </ion-row>
+                
+
+            <ion-row *ngIf="mostrarMas" style="width: 100%;">
+                <ion-col size="12" class="center" (click)="cargarMas()">
+                    <ion-icon name="arrow-down-outline"></ion-icon>
+                </ion-col>
+            </ion-row>
+        </ion-card-content>
+    </ion-card>
+
+    <ion-fab *ngIf="storageService.tieneRolAseo" vertical="bottom" horizontal="start" slot="fixed">
+        <ion-fab-button color="secondary" (click)="mostrarCalendario()">
+            <ion-icon name="calendar-outline"></ion-icon>
+        </ion-fab-button>
+    </ion-fab>
+</ion-content>

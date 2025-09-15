@@ -1,0 +1,15 @@
+<ion-content>
+    <ion-fab vertical="top" horizontal="start" slot="fixed">
+        <ion-fab-button (click)="dismiss()">
+            <ion-icon name="arrow-back-outline"></ion-icon>
+        </ion-fab-button>
+    </ion-fab>
+
+    <ion-slides [options]="sliderOpts">
+        <ion-slide>
+            <div class="swiper-zoom-container">
+                <img src="{{ url }}">                
+            </div>
+        </ion-slide>
+    </ion-slides>
+</ion-content>

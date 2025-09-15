@@ -1,0 +1,112 @@
+<ion-content class="ion-content">
+    <ion-row>
+        <ion-col class="center" style="max-height: 70px;">
+            <h3 class="title4" *ngIf="storageService.usuario == null || (storageService.usuario != null && storageService.usuario.esPapa)">
+                ¡Bienvenido!
+            </h3>
+            <h3 class="title4" *ngIf="storageService.usuario != null && !storageService.usuario.esPapa">¡Bienvenida!</h3>
+        </ion-col>
+    </ion-row>
+    <ion-row>
+        <ion-col class="center" style="margin-top: -20px;">
+            <h3 class="title4-1" *ngIf="storageService.usuario != null">
+                {{ storageService.usuario.names }} {{ storageService.usuario.surnames }}
+            </h3>
+            <h3 class="title4-1" *ngIf="storageService.usuario == null">&nbsp;</h3>
+        </ion-col>
+    </ion-row>
+
+    <div *ngIf="!storageService.autenticado">
+        <ion-row>
+            <ion-col size="6" class="center option-menu" (click)="aseo()">
+                <img src="../assets/aseo3.png" alt="" style="height: 90px;">
+                <br>
+                Grooming SPA
+            </ion-col>
+            <ion-col size="6" class="center option-menu" (click)="paseo()">
+                <img src="../assets/paseo3.png" alt="" style="height: 90px;">
+                <br>
+                Dog Walker
+            </ion-col>
+        </ion-row>
+        <ion-row>
+            <ion-col size="6" class="center option-menu" (click)="tiendas()">
+                <img src="../assets/localizacion3.png" alt="" style="height: 90px;">
+                <br>
+                Ubicaciones
+            </ion-col>
+            <ion-col size="6" class="center option-menu" (click)="ingresar()">
+                <img src="../assets/ingresar.png" alt="" style="height: 90px;">
+                <br>
+                Ingresar
+            </ion-col>
+        </ion-row>
+    </div>
+    
+    <div *ngIf="storageService.tieneRolCliente">
+        <ion-row>
+            <ion-col size="6" class="center option-menu" (click)="aseo()">
+                <img src="../assets/aseo3.png" alt="" style="height: 90px;">
+                <br>
+                Grooming SPA
+            </ion-col>
+            <ion-col size="6" class="center option-menu" (click)="paseo()">
+                <img src="../assets/paseo3.png" alt="" style="height: 90px;">
+                <br>
+                Dog Walker
+            </ion-col>
+        </ion-row>
+        <ion-row>
+            <ion-col size="6" class="center option-menu" (click)="mascotas()">
+                <img src="../assets/peluditos3.png" alt="" style="height: 90px;">
+                <br>
+                Peluditos
+            </ion-col>
+            <ion-col size="6" class="center option-menu" (click)="actualizarUsuario()">
+                <img *ngIf="storageService.usuario == null || (storageService.usuario != null && storageService.usuario.esPapa)" src="../assets/hombre3.png" alt="" style="height: 90px;">
+                <img *ngIf="storageService.usuario != null && !storageService.usuario.esPapa" src="../assets/mujer3.png" alt="" style="height: 90px;">
+                <br>
+                Usuario
+            </ion-col>
+        </ion-row>
+        <ion-row>
+            <ion-col size="6" class="center option-menu" (click)="tiendas()">
+                <img src="../assets/localizacion3.png" alt="" style="height: 90px;">
+                <br>
+                Ubicaciones
+            </ion-col>
+            <ion-col size="6" class="center option-menu" (click)="salir()">
+                <img src="../assets/salir4.png" alt="" style="height: 90px;">
+                <br>
+                Salir
+            </ion-col>
+        </ion-row>
+    </div>
+
+    <div *ngIf="storageService.tieneRolAseo || storageService.tieneRolPiloto">
+        <ion-row>
+            <ion-col size="6" class="center option-menu" (click)="aseo()">
+                <img src="../assets/aseo3.png" alt="" style="height: 90px;">
+                <br>
+                Grooming SPA
+            </ion-col>
+            <ion-col size="6" class="center option-menu" (click)="paseo()">
+                <img src="../assets/paseo3.png" alt="" style="height: 90px;">
+                <br>
+                Dog Walker
+            </ion-col>
+        </ion-row>
+        <ion-row>
+            <ion-col size="6" class="center option-menu" (click)="tiendas()">
+                <img src="../assets/localizacion3.png" alt="" style="height: 90px;">
+                <br>
+                Ubicaciones
+            </ion-col>
+            <ion-col size="6" class="center option-menu" (click)="salir()">
+                <img src="../assets/salir4.png" alt="" style="height: 90px;">
+                <br>
+                Salir
+            </ion-col>
+        </ion-row>
+    </div>
+</ion-content>
