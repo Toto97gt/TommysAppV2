@@ -1,5 +1,6 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { Platform } from '@ionic/angular';
+import { IonicModule } from '@ionic/angular';
 import { AppLauncher } from '@capacitor/app-launcher';
 import { Capacitor } from '@capacitor/core';
 
@@ -14,13 +15,13 @@ import { StorageService } from 'src/services/storage.service';
   selector: 'app-tienda-lista',
   templateUrl: './tienda-lista.page.html',
   styleUrls: ['./tienda-lista.page.scss'],
+  standalone: true,
+  imports: [CommonModule, IonicModule],
 })
 export class TiendaListaPage implements OnInit {
-
   tiendas: any[] = [];
 
   constructor(
-    private platform: Platform,
     private restApiService: RestApiService,
     private alertasService: AlertasService,
     private storageService: StorageService,
@@ -37,9 +38,8 @@ export class TiendaListaPage implements OnInit {
     this.tiendas = [];
     if (this.networkService.getCurrentNetworkStatus() === ConnectionStatus.Online) {
       this.alertasService.presentLoading('');
-
       this.restApiService.postApiPublic('tienda/lista', null).then((respuesta: any) => {
-        if (respuesta.exitoso) {
+        if (respuesta?.exitoso) {
           this.revisarArchivosLocales(respuesta.datos.tiendas, true);
         } else {
           console.error('No se han podido cargar las tiendas', respuesta);
@@ -48,7 +48,7 @@ export class TiendaListaPage implements OnInit {
       });
     } else {
       this.storageService.getItemObject('tiendas').then((tiendas: any) => {
-        if (tiendas !== null) {
+        if (tiendas) {
           this.revisarArchivosLocales(tiendas, false);
         } else {
           this.tiendas = [];
@@ -57,11 +57,10 @@ export class TiendaListaPage implements OnInit {
     }
   }
 
-  /** ✅ Reemplazo de CallNumber: usa AppLauncher con esquema tel: */
+  /** Llamar por teléfono con esquema tel: usando AppLauncher (Capacitor) */
   async llamar(telefono: string) {
     const url = `tel:${telefono}`;
     try {
-      // En web, muchos navegadores abren tel: directamente
       if (Capacitor.getPlatform() === 'web') {
         window.location.href = url;
         return;
@@ -70,41 +69,31 @@ export class TiendaListaPage implements OnInit {
       if (can.value) {
         await AppLauncher.openUrl({ url });
       } else {
-        // Fallback suave en caso de que no pueda abrir vía plugin
         window.location.href = url;
       }
-    } catch (e) {
-      // Último fallback
+    } catch {
       window.location.href = url;
     }
   }
 
   revisarArchivosLocales(tiendas: any[], guardarLocal: boolean) {
     this.tiendas = [];
-    // Conserva la lógica original: si existe en local, usa esa URL;
-    // si no, deja la remota y dispara la descarga en background.
     tiendas.forEach(tienda => {
-      if (tienda.urlFoto !== undefined && tienda.urlFoto !== null) {
+      if (tienda.urlFoto != null) {
         this.multimediaService.existeArchivo(tienda.urlFoto).then((resultado: any) => {
           if (resultado.existe) {
             tienda.urlFoto = resultado.url;
             tienda.urlFotoSafe = resultado.urlSafe;
           } else {
-            // descarga en background y mantén la URL remota visible
             this.multimediaService.descargar(tienda.urlFoto);
             tienda.urlFotoSafe = tienda.urlFoto;
           }
-
           this.tiendas.push(tienda);
-          if (guardarLocal) {
-            this.storageService.setItemObject('tiendas', this.tiendas);
-          }
+          if (guardarLocal) this.storageService.setItemObject('tiendas', this.tiendas);
         });
       } else {
         this.tiendas.push(tienda);
-        if (guardarLocal) {
-          this.storageService.setItemObject('tiendas', this.tiendas);
-        }
+        if (guardarLocal) this.storageService.setItemObject('tiendas', this.tiendas);
       }
     });
   }

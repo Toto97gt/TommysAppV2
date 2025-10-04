@@ -1,20 +1,23 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { NavController } from '@ionic/angular';
+import { IonicModule, NavController } from '@ionic/angular';
+import { AppLauncher } from '@capacitor/app-launcher';
+import { Capacitor } from '@capacitor/core';
+
 import { AlertasService } from 'src/services/alertas.service';
 import { GpsService } from 'src/services/gps.service';
 import { ConnectionStatus, NetworkService } from 'src/services/network.service';
 import { RestApiService } from 'src/services/restApi.service';
 import { StorageService } from 'src/services/storage.service';
-import { AppLauncher } from '@capacitor/app-launcher';
-import { Capacitor } from '@capacitor/core';
 
 @Component({
+  standalone: true,
   selector: 'app-albergue-lista',
   templateUrl: './albergue-lista.page.html',
   styleUrls: ['./albergue-lista.page.scss'],
+  imports: [CommonModule, IonicModule],
 })
 export class AlbergueListaPage implements OnInit {
-
   albergues: any[] = [];
 
   constructor(
@@ -26,7 +29,7 @@ export class AlbergueListaPage implements OnInit {
     private gpsService: GpsService
   ) {}
 
-  ngOnInit() {}
+  ngOnInit(): void {}
 
   ionViewWillEnter(): void {
     this.albergues = [];
@@ -40,7 +43,6 @@ export class AlbergueListaPage implements OnInit {
         } else {
           console.error('No se han podido cargar los albergues', respuesta);
         }
-
         this.alertasService.dismissLoading();
       });
     } else {
@@ -62,18 +64,15 @@ export class AlbergueListaPage implements OnInit {
 
   async llamar(telefono: string): Promise<void> {
     const url = `tel:${telefono}`;
-
     try {
       if (Capacitor.getPlatform() === 'web') {
         window.location.href = url;
         return;
       }
-
       const can = await AppLauncher.canOpenUrl({ url });
       if (can.value) {
         await AppLauncher.openUrl({ url });
       } else {
-        // Fallback
         window.location.href = url;
       }
     } catch {

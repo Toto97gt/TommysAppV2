@@ -1,14 +1,18 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { LoadingController, NavController } from '@ionic/angular';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { IonicModule, NavController } from '@ionic/angular';
+
 import { AlertasService } from 'src/services/alertas.service';
 import { FCMService } from 'src/services/fcm.service';
 import { RestApiService } from 'src/services/restApi.service';
 
 @Component({
-    selector: 'app-registro',
-    templateUrl: './registro.page.html',
-    styleUrls: ['./registro.page.scss'],
+  selector: 'app-registro',
+  standalone: true,
+  imports: [CommonModule, IonicModule, ReactiveFormsModule],
+  templateUrl: './registro.page.html',
+  styleUrls: ['./registro.page.scss'],
 })
 export class RegistroPage implements OnInit {
 
@@ -54,11 +58,7 @@ export class RegistroPage implements OnInit {
     return (group: FormGroup): { [key: string]: any } | null => {
       const password = group.controls[passwordKey];
       const confirmPassword = group.controls[passwordConfirmKey];
-
-      if (password.value !== confirmPassword.value) {
-        return { mismatchedPasswords: true };
-      }
-      return null; // ✅ importante para no marcar error cuando coinciden
+      return password.value === confirmPassword.value ? null : { mismatchedPasswords: true };
     };
   }
 
@@ -77,7 +77,6 @@ export class RegistroPage implements OnInit {
       } else {
         this.alertaRegistrar(respuesta?.mensaje ?? 'No se pudo registrar.', false);
       }
-
       this.alertasService.dismissLoading();
     });
   }
@@ -96,7 +95,6 @@ export class RegistroPage implements OnInit {
       } else {
         this.alertaConfirmar(respuesta?.mensaje ?? 'No se pudo confirmar.', false);
       }
-
       this.alertasService.dismissLoading();
     });
   }
@@ -110,7 +108,6 @@ export class RegistroPage implements OnInit {
     this.alertasService.presentLoading('');
     this.restApiService.autenticar(credencialies).then((respuesta: any) => {
       this.alertasService.dismissLoading();
-
       if (respuesta?.exitoso) {
         this.fCMService.obtenerToken();
         this.restApiService.verificarEstadoUsuario();

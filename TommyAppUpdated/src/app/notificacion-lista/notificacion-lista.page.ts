@@ -1,4 +1,7 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { IonicModule } from '@ionic/angular';
+
 import { AlertasService } from 'src/services/alertas.service';
 import { ConnectionStatus, NetworkService } from 'src/services/network.service';
 import { RestApiService } from 'src/services/restApi.service';
@@ -14,6 +17,8 @@ interface Notificacion {
   selector: 'app-notificacion-lista',
   templateUrl: './notificacion-lista.page.html',
   styleUrls: ['./notificacion-lista.page.scss'],
+  standalone: true,
+  imports: [CommonModule, IonicModule],
 })
 export class NotificacionListaPage implements OnInit {
 
@@ -72,10 +77,11 @@ export class NotificacionListaPage implements OnInit {
         });
       });
     } else {
+      // (sin cambios) lógica offline si la agregas más adelante
     }
   }
 
-  revisarArchivosLocales(notificaciones: Notificacion[], guardarLocal: boolean): void {
+  revisarArchivosLocales(notificaciones: Notificacion[], _guardarLocal: boolean): void {
     notificaciones.forEach((notificacion: Notificacion) => {
       notificacion.urlFotoSafe = notificacion.urlFoto;
       this.notificaciones.push(notificacion);

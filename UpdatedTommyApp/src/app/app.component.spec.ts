@@ -1,6 +1,7 @@
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { TestBed, waitForAsync } from '@angular/core/testing';
-import { Platform, NavController } from '@ionic/angular';
+import { Platform, NavController, IonicModule } from '@ionic/angular';
+import { RouterTestingModule } from '@angular/router/testing';
 
 import { AppComponent } from './app.component';
 
@@ -37,14 +38,20 @@ describe('AppComponent', () => {
     splashHideSpy = spyOn(SplashScreen, 'hide').and.returnValue(Promise.resolve());
     orientationLockSpy = spyOn(ScreenOrientation, 'lock').and.returnValue(Promise.resolve());
 
-    navSpy = jasmine.createSpyObj('NavController', ['navigateRoot']);
-    permSpy = jasmine.createSpyObj('PermissionService', ['solicitarPermisoEscritura']);
-    permSpy.solicitarPermisoEscritura.and.returnValue(Promise.resolve(true));
-    fcmSpy = jasmine.createSpyObj('FCMService', ['inicializar']);
+    navSpy = jasmine.createSpyObj<NavController>('NavController', ['navigateRoot']);
+
+    permSpy = jasmine.createSpyObj<PermissionService>('PermissionService', ['getPermisosCorrectos']);
+    permSpy.getPermisosCorrectos.and.returnValue(Promise.resolve(true));
+
+    fcmSpy = jasmine.createSpyObj<FCMService>('FCMService', ['inicializar']);
 
     TestBed.configureTestingModule({
       declarations: [AppComponent],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA],
+      imports: [
+        IonicModule.forRoot(),    
+        RouterTestingModule,       
+      ],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA], 
       providers: [
         { provide: Platform, useValue: platformSpy },
         { provide: NavController, useValue: navSpy },
@@ -58,25 +65,28 @@ describe('AppComponent', () => {
 
   it('should create the app', () => {
     const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.debugElement.componentInstance;
+    const app = fixture.componentInstance;
     expect(app).toBeTruthy();
   });
 
   it('should initialize the app', async () => {
     TestBed.createComponent(AppComponent);
     expect(platformSpy.ready).toHaveBeenCalled();
-    await platformReadySpy;
-    expect(orientationLockSpy).toHaveBeenCalledWith({ orientation: 'portrait' });
 
+    await platformReadySpy;
+
+    expect(orientationLockSpy).toHaveBeenCalledWith({ orientation: 'portrait' });
     expect(getPlatformSpy).toHaveBeenCalled();
     expect(statusBarSetStyleSpy).toHaveBeenCalledWith({ style: Style.Dark });
-
     expect(splashHideSpy).toHaveBeenCalled();
 
-    expect(permSpy.solicitarPermisoEscritura).toHaveBeenCalled();
-    expect(fcmSpy.inicializar).toHaveBeenCalled();
+    expect(
+      (permSpy as any).getPermisosCorrectos
+        ? permSpy.getPermisosCorrectos
+        : (permSpy as any).solicitarPermisoEscritura
+    ).toHaveBeenCalled();
 
+    expect(fcmSpy.inicializar).toHaveBeenCalled();
     expect(navSpy.navigateRoot).toHaveBeenCalledWith('/tabs-inicio');
   });
-
 });

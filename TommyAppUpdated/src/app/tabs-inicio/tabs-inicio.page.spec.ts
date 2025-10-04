@@ -1,26 +1,24 @@
-import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
 import { TabsInicioPage } from './tabs-inicio.page';
 
-describe('TabsInicioPage', () => {
-    let component: TabsInicioPage;
-    let fixture: ComponentFixture<TabsInicioPage>;
+describe('TabsInicioPage (standalone)', () => {
+  let component: TabsInicioPage;
+  let fixture: ComponentFixture<TabsInicioPage>;
 
-    beforeEach(waitForAsync(() => {
-        TestBed.configureTestingModule({
-            declarations: [TabsInicioPage],
-            schemas: [CUSTOM_ELEMENTS_SCHEMA],
-        })
-            .compileComponents();
-    }));
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
+      // En standalone, el componente va en `imports`, NO en `declarations`
 
-    beforeEach(() => {
-        fixture = TestBed.createComponent(TabsInicioPage);
-        component = fixture.componentInstance;
-        fixture.detectChanges();
-    });
+      imports: [TabsInicioPage, RouterTestingModule],
+    }).compileComponents();
 
-    it('should create', () => {
-        expect(component).toBeTruthy();
-    });
+    fixture = TestBed.createComponent(TabsInicioPage);
+    component = fixture.componentInstance;
+    fixture.detectChanges();  
+  }));
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
 });

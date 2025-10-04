@@ -1,8 +1,8 @@
-import { DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { ActionSheetController, NavController } from '@ionic/angular';
+import { IonicModule, ActionSheetController, NavController } from '@ionic/angular';
 import { IonicSelectableComponent } from 'ionic-selectable';
 
 import { DatetimePicker } from '@capawesome-team/capacitor-datetime-picker';
@@ -15,8 +15,16 @@ import { StorageService } from 'src/services/storage.service';
 
 @Component({
   selector: 'app-wizard-datos-mascota',
+  standalone: true,
   templateUrl: './wizard-datos-mascota.page.html',
   styleUrls: ['./wizard-datos-mascota.page.scss'],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    IonicModule,
+    IonicSelectableComponent
+  ],
+  providers: [DatePipe]
 })
 export class WizardDatosMascotaPage implements OnInit {
 
@@ -89,12 +97,8 @@ export class WizardDatosMascotaPage implements OnInit {
         this.mascotaForm.get('tipoMascota')!.setValue(mascota.tipoMascota);
         this.mascotaForm.get('raza')!.setValue(mascota.raza);
         this.mascotaForm.get('enfermedades')!.setValue(mascota.enfermedades);
-        if (mascota.otraRaza != null) {
-          this.mascotaForm.get('otraRaza')!.setValue(mascota.otraRaza);
-        }
-        if (mascota.otraEnfermedad != null) {
-          this.mascotaForm.get('otraEnfermedad')!.setValue(mascota.otraEnfermedad);
-        }
+        if (mascota.otraRaza != null) this.mascotaForm.get('otraRaza')!.setValue(mascota.otraRaza);
+        if (mascota.otraEnfermedad != null) this.mascotaForm.get('otraEnfermedad')!.setValue(mascota.otraEnfermedad);
 
         this.storageService.getItemObject('razas').then((razas: any) => {
           this.razas = razas[mascota.tipoMascota.id];
@@ -123,9 +127,7 @@ export class WizardDatosMascotaPage implements OnInit {
       this.storageService.getItemObject('datosUsuario').then(datosUsuario => {
         this.restApiService.postApi('usuario/completarDatos', { datosUsuario, datosMascota }).then((respuesta: any) => {
           if (respuesta.exitoso) {
-            this.restApiService.actualizarDatosUsuario().then(() => {
-              this.alertaAlmacenar(respuesta.mensaje, true);
-            });
+            this.restApiService.actualizarDatosUsuario().then(() => this.alertaAlmacenar(respuesta.mensaje, true));
           } else {
             this.alertaAlmacenar(respuesta.mensaje, false);
           }
@@ -134,12 +136,12 @@ export class WizardDatosMascotaPage implements OnInit {
       }).catch(() => this.alertasService.dismissLoading());
     } else if (this.navegacion === 'AGREGAR') {
       this.restApiService.postApi('mascota/agregar', datosMascota).then((respuesta: any) => {
-        this.alertaAlmacenar(respuesta.exitoso ? respuesta.mensaje : respuesta.mensaje, !!respuesta.exitoso);
+        this.alertaAlmacenar(respuesta.mensaje, !!respuesta.exitoso);
         this.alertasService.dismissLoading();
       });
     } else if (this.navegacion === 'ACTUALIZAR') {
       this.restApiService.postApi('mascota/actualizar', datosMascota).then((respuesta: any) => {
-        this.alertaAlmacenar(respuesta.exitoso ? respuesta.mensaje : respuesta.mensaje, !!respuesta.exitoso);
+        this.alertaAlmacenar(respuesta.mensaje, !!respuesta.exitoso);
         this.alertasService.dismissLoading();
       });
     }
@@ -154,7 +156,6 @@ export class WizardDatosMascotaPage implements OnInit {
   }
 
   enfermedadChange(event: { component: IonicSelectableComponent; value: any[] }) {
-    // mantiene tu lógica; ahora también apaga el flag si no está seleccionada "Otra"
     this.mostrarOtraEnfermedad = !!event.value?.some(e => e?.nombre === 'Otra');
   }
 
@@ -164,30 +165,23 @@ export class WizardDatosMascotaPage implements OnInit {
     });
   }
 
-  /** ✅ Reemplazo del DatePicker nativo por Capawesome DatetimePicker */
   async mostrarCalendario() {
     try {
       const now = new Date();
       const current = this.mascotaForm.get('fechaNacimiento')!.value;
-      const initialDate = current
-        ? this.parseFechaDDMMYYYY(current) ?? now
-        : now;
+      const initialDate = current ? this.parseFechaDDMMYYYY(current) ?? now : now;
 
       const { value } = await DatetimePicker.present({
         mode: 'date',
         value: initialDate.toISOString(),
         max: now.toISOString(),
-        // opcionales:
-        // theme: 'auto',
-        // locale: 'es-GT',
       });
 
-      // el plugin devuelve string según "format" (por defecto ISO). Lo parseamos:
       const elegido = new Date(value);
       const fechaTexto = this.datePipe.transform(elegido, 'dd-MM-yyyy');
       this.mascotaForm.get('fechaNacimiento')!.setValue(fechaTexto);
     } catch {
-      // si el usuario cancela, el plugin lanza un error: lo ignoramos
+      // cancelado
     }
   }
 
@@ -239,7 +233,6 @@ export class WizardDatosMascotaPage implements OnInit {
                   : this.sanitizer.bypassSecurityTrustResourceUrl(
                       Capacitor.convertFileSrc(foto.url)
                     )) as SafeResourceUrl;
-
                 this.urlFoto = url;
                 this.foto = foto;
               }
@@ -258,7 +251,6 @@ export class WizardDatosMascotaPage implements OnInit {
                   : this.sanitizer.bypassSecurityTrustResourceUrl(
                       Capacitor.convertFileSrc(foto.url)
                     )) as SafeResourceUrl;
-
                 this.urlFoto = url;
                 this.foto = foto;
               }
@@ -271,11 +263,7 @@ export class WizardDatosMascotaPage implements OnInit {
     await actionSheet.present();
   }
 
-  // ------------------------
-  // Helpers
-  // ------------------------
   private parseFechaDDMMYYYY(txt: string): Date | null {
-    // 'dd-MM-yyyy' -> Date
     const [dd, mm, yyyy] = (txt || '').split('-').map(Number);
     if (!dd || !mm || !yyyy) return null;
     const d = new Date(yyyy, mm - 1, dd);

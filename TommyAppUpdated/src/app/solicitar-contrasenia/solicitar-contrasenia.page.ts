@@ -1,4 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import {
+  Component,
+  OnInit,
+} from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -6,8 +10,9 @@ import {
   FormControl,
   ValidatorFn,
   AbstractControl,
+  ReactiveFormsModule,
 } from '@angular/forms';
-import { NavController } from '@ionic/angular';
+import { IonicModule, NavController } from '@ionic/angular';
 
 import { AlertasService } from 'src/services/alertas.service';
 import { RestApiService } from 'src/services/restApi.service';
@@ -26,6 +31,8 @@ type CambiarForm = {
   selector: 'app-solicitar-contrasenia',
   templateUrl: './solicitar-contrasenia.page.html',
   styleUrls: ['./solicitar-contrasenia.page.scss'],
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, IonicModule],
 })
 export class SolicitarContraseniaPage implements OnInit {
   solicitarForm!: FormGroup<SolicitarForm>;

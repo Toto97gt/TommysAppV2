@@ -1,6 +1,6 @@
-import { DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { IonInfiniteScroll, NavController } from '@ionic/angular';
+import { IonicModule, IonInfiniteScroll, NavController } from '@ionic/angular';
 
 import { DatetimePicker } from '@capawesome-team/capacitor-datetime-picker';
 import { AppLauncher } from '@capacitor/app-launcher';
@@ -17,6 +17,9 @@ import { StorageService } from 'src/services/storage.service';
   selector: 'app-servicio-lista',
   templateUrl: './servicio-lista.page.html',
   styleUrls: ['./servicio-lista.page.scss'],
+  standalone: true,
+  imports: [CommonModule, IonicModule],
+  providers: [DatePipe],
 })
 export class ServicioListaPage implements OnInit {
 
@@ -193,8 +196,7 @@ export class ServicioListaPage implements OnInit {
       const { value } = await DatetimePicker.present({
         mode: 'date',
         value: hoy.toISOString(),
-        min: hoy.toISOString(), // mismo comportamiento que antes (minDate = hoy)
-        // locale: 'es-GT', // opcional
+        min: hoy.toISOString(),
       });
 
       const fechaElegida = new Date(value);
@@ -204,7 +206,7 @@ export class ServicioListaPage implements OnInit {
       this.mostrarMas = false;
       this.cargarServicios();
     } catch {
-      // usuario canceló; no hacer nada
+      // usuario canceló
     }
   }
 

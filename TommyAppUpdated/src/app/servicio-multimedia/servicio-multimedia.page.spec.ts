@@ -1,23 +1,21 @@
-import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
-import { IonicModule } from '@ionic/angular';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { ServicioMultimediaPage } from './servicio-multimedia.page';
 
 describe('ServicioMultimediaPage', () => {
-    let component: ServicioMultimediaPage;
-    let fixture: ComponentFixture<ServicioMultimediaPage>;
+  let component: ServicioMultimediaPage;
+  let fixture: ComponentFixture<ServicioMultimediaPage>;
 
-    beforeEach(waitForAsync(() => {
-        TestBed.configureTestingModule({
-            declarations: [ServicioMultimediaPage],
-            imports: [IonicModule.forRoot()]
-        }).compileComponents();
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
+      imports: [ServicioMultimediaPage], // ⬅️ standalone: se importa el componente
+    }).compileComponents();
 
-        fixture = TestBed.createComponent(ServicioMultimediaPage);
-        component = fixture.componentInstance;
-        fixture.detectChanges();
-    }));
+    fixture = TestBed.createComponent(ServicioMultimediaPage);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  }));
 
-    it('should create', () => {
-        expect(component).toBeTruthy();
-    });
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
 });

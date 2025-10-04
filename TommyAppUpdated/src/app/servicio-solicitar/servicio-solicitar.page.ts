@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { AbstractControl, FormBuilder, FormGroup } from '@angular/forms';
-import { NavController } from '@ionic/angular';
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { IonicModule, NavController } from '@ionic/angular';
+
 import { AlertasService } from 'src/services/alertas.service';
 import { GpsService } from 'src/services/gps.service';
 import { MascotaService } from 'src/services/mascota.service';
@@ -10,9 +12,11 @@ import { RestApiService } from 'src/services/restApi.service';
 import { StorageService } from 'src/services/storage.service';
 
 @Component({
-    selector: 'app-servicio-solicitar',
-    templateUrl: './servicio-solicitar.page.html',
-    styleUrls: ['./servicio-solicitar.page.scss'],
+  selector: 'app-servicio-solicitar',
+  templateUrl: './servicio-solicitar.page.html',
+  styleUrls: ['./servicio-solicitar.page.scss'],
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, IonicModule],
 })
 export class ServicioSolicitarPage implements OnInit {
 
@@ -71,11 +75,11 @@ export class ServicioSolicitarPage implements OnInit {
     const cacheMascotasRaw = await this.storageService.getItemObject('mascotas');
 
     if (Array.isArray(cacheMascotasRaw) && cacheMascotasRaw.length > 0) {
-        this.filtrarMascotas(cacheMascotasRaw);
+      this.filtrarMascotas(cacheMascotasRaw);
     } else {
-        const mascotasListaRaw = await this.mascotaService.obtenerMascotas();
-        const mascotasLista = Array.isArray(mascotasListaRaw) ? mascotasListaRaw : [];
-        this.filtrarMascotas(mascotasLista);
+      const mascotasListaRaw = await this.mascotaService.obtenerMascotas();
+      const mascotasLista = Array.isArray(mascotasListaRaw) ? mascotasListaRaw : [];
+      this.filtrarMascotas(mascotasLista);
     }
   }
 
@@ -242,7 +246,7 @@ export class ServicioSolicitarPage implements OnInit {
     this.navController.navigateBack('/tabs-servicio');
   }
 
-  static mustBeTruthy(c: any): { [key: string]: boolean } | null {
+  static mustBeTruthy(c: AbstractControl): { [key: string]: boolean } | null {
     return c?.value ? null : { notChecked: true };
   }
 }

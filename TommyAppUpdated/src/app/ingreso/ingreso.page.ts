@@ -1,6 +1,8 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavController } from '@ionic/angular';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { IonicModule, NavController } from '@ionic/angular';
+
 import { AlertasService } from 'src/services/alertas.service';
 import { FCMService } from 'src/services/fcm.service';
 import { RestApiService } from 'src/services/restApi.service';
@@ -8,6 +10,8 @@ import { StorageService } from 'src/services/storage.service';
 
 @Component({
   selector: 'app-ingreso',
+  standalone: true,
+  imports: [CommonModule, IonicModule, ReactiveFormsModule],
   templateUrl: './ingreso.page.html',
   styleUrls: ['./ingreso.page.scss'],
 })
@@ -86,12 +90,7 @@ export class IngresoPage implements OnInit {
       idAlert: 'INGRESO',
       titulo: 'Ingreso',
       mensaje,
-      botones: [
-        {
-          text: 'Corregir',
-          handler: () => {},
-        },
-      ],
+      botones: [{ text: 'Corregir', handler: () => {} }],
     };
     this.alertasService.presentarAlerta(opciones);
   }

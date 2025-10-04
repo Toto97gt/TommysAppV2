@@ -1,27 +1,25 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { ModalController } from '@ionic/angular';
+import { CommonModule } from '@angular/common';
+import { Component, Input } from '@angular/core';
+import { IonicModule, ModalController } from '@ionic/angular';
 
 @Component({
-    selector: 'app-multimedia-modal',
-    templateUrl: './multimedia-modal.page.html',
-    styleUrls: ['./multimedia-modal.page.scss'],
+  selector: 'app-multimedia-modal',
+  standalone: true,
+  imports: [CommonModule, IonicModule],
+  templateUrl: './multimedia-modal.page.html',
+  styleUrls: ['./multimedia-modal.page.scss'],
 })
-export class MultimediaModalPage implements OnInit {
+export class MultimediaModalPage {
+  @Input() url!: string;
 
-    @Input('url') url: any;
+  sliderOpts = {
+    passiveListeners: false,
+    zoom: true,
+  };
 
-    sliderOpts = {
-        passiveListeners: false,
-        zoom: true
-    };
+  constructor(private modalCtrl: ModalController) {}
 
-    constructor(private modalCtrl: ModalController) { }
-
-    ngOnInit() { }
-
-    dismiss() {
-        this.modalCtrl.dismiss({
-            dismissed: true
-        });
-    }
+  dismiss(): void {
+    this.modalCtrl.dismiss({ dismissed: true });
+  }
 }

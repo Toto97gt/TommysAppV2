@@ -1,7 +1,7 @@
-import { DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavController } from '@ionic/angular';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { IonicModule, NavController } from '@ionic/angular';
 
 import { DatetimePicker } from '@capawesome-team/capacitor-datetime-picker';
 
@@ -15,6 +15,9 @@ import { StorageService } from 'src/services/storage.service';
   selector: 'app-servicio-agendar',
   templateUrl: './servicio-agendar.page.html',
   styleUrls: ['./servicio-agendar.page.scss'],
+  standalone: true,
+  imports: [CommonModule, IonicModule, ReactiveFormsModule],
+  providers: [DatePipe],
 })
 export class ServicioAgendarPage implements OnInit {
   agendarForm!: FormGroup;
@@ -85,8 +88,8 @@ export class ServicioAgendarPage implements OnInit {
       const { value } = await DatetimePicker.present({
         mode: 'date',
         value: hoy.toISOString(),
-        min: hoy.toISOString(), // mismo comportamiento que minDate = hoy
-        // locale: 'es-GT', // opcional
+        min: hoy.toISOString(), // minDate = hoy
+        // locale: 'es-GT',
       });
 
       const fechaElegida = new Date(value);

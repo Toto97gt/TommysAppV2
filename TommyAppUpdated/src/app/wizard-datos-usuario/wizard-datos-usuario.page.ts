@@ -5,6 +5,9 @@ import { IonicSelectableComponent } from 'ionic-selectable';
 import { AlertasService } from 'src/services/alertas.service';
 import { RestApiService } from 'src/services/restApi.service';
 import { StorageService } from 'src/services/storage.service';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
+import { IonicModule } from '@ionic/angular';
 
 type Opcion = { id: number; nombre: string };
 type Sexo = { id: boolean; nombre: string };
@@ -36,8 +39,10 @@ type UsuarioForm = {
 
 @Component({
   selector: 'app-wizard-datos-usuario',
+  standalone: true,
   templateUrl: './wizard-datos-usuario.page.html',
   styleUrls: ['./wizard-datos-usuario.page.scss'],
+  imports: [CommonModule, ReactiveFormsModule, IonicModule, IonicSelectableComponent]
 })
 export class WizardDatosUsuarioPage implements OnInit {
 
@@ -50,7 +55,6 @@ export class WizardDatosUsuarioPage implements OnInit {
   municipios: Opcion[] = [];
 
   navegacion: string | null = null;
-  loading: any;
 
   constructor(
     private fb: FormBuilder,
@@ -92,11 +96,9 @@ export class WizardDatosUsuarioPage implements OnInit {
       this.usuario = usuario;
 
       if (usuario) {
-        // Set inicial de municipios del depto del usuario
         const municipiosAll = await this.storageService.getItemObject('municipios');
         this.municipios = municipiosAll ? (municipiosAll['departamento' + usuario.departamento.id] ?? []) : [];
 
-        // Patch de valores
         this.usuarioForm.patchValue({
           tienda: usuario.tienda,
           nombres: usuario.names,
@@ -116,7 +118,7 @@ export class WizardDatosUsuarioPage implements OnInit {
     const datosUsuario = {
       nombres: this.usuarioForm.controls.nombres.value,
       apellidos: this.usuarioForm.controls.apellidos.value,
-      esPapa: this.usuarioForm.controls.esPapa.value,
+      esPapa: this.usuarioForm.controls.esPapa.value, // usa .id si tu API espera booleano
       telefono: this.usuarioForm.controls.telefono.value,
       direccion: this.usuarioForm.controls.direccion.value,
       zona: this.usuarioForm.controls.zona.value,
@@ -136,7 +138,7 @@ export class WizardDatosUsuarioPage implements OnInit {
       id: this.usuario?.id,
       nombres: this.usuarioForm.controls.nombres.value,
       apellidos: this.usuarioForm.controls.apellidos.value,
-      esPapa: this.usuarioForm.controls.esPapa.value,
+      esPapa: this.usuarioForm.controls.esPapa.value, // usa .id si tu API espera booleano
       telefono: this.usuarioForm.controls.telefono.value,
       direccion: this.usuarioForm.controls.direccion.value,
       zona: this.usuarioForm.controls.zona.value,
@@ -159,7 +161,6 @@ export class WizardDatosUsuarioPage implements OnInit {
 
   async departamentoChange(event: { component: IonicSelectableComponent; value: Opcion }) {
     this.usuarioForm.controls.municipio.setValue(null);
-
     const municipiosAll = await this.storageService.getItemObject('municipios');
     this.municipios = municipiosAll ? (municipiosAll['departamento' + event.value.id] ?? []) : [];
   }
@@ -174,7 +175,7 @@ export class WizardDatosUsuarioPage implements OnInit {
           text: 'Aceptar',
           handler: () => {
             if (exitoso) {
-              this.navController.navigateBack('/tab-inicio');
+              this.navController.navigateBack('/tabs-inicio'); // 👈 corregido
             }
           }
         }
